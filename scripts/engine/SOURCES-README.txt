@@ -17,6 +17,16 @@ contains the package .PKGINFO files used to derive those exact source versions.
 The source archives preserve their original PKGBUILD, patches and upstream
 source inputs. Follow their own build recipes and license notices.
 
+setup-msys2 clears its package cache after setup. The collector obtains only
+the exact installed binary package version with pacman's required trusted
+signature policy, and rechecks .PKGINFO; it never installs or upgrades packages.
+
+The audited MSYS2 FFmpeg binary package lacks share/licenses files. For that
+package and its GPL-3.0-or-later declaration only, original FFmpeg license texts
+are copied from the exact corresponding source archive. source-provenance.json
+beside those notices records outer/inner archive and notice SHA256 values.
+No generic exception for packages without license notices is permitted.
+
 No source archive or license may be omitted to make a failed packaging step pass.
 If an exact source archive is unavailable, packaging must fail rather than upload.
 

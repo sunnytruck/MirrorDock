@@ -47,6 +47,12 @@ GStreamerのcoreや多くのpluginはLGPLですが、**すべてのGStreamer関�
 
 MSYS2は、パッケージのlicense metadataと、通常`<prefix>/share/licenses/<real-package-name>/`に置くライセンス本文の両方を提供します。配置の例外もあるため、対象パッケージごとに確認します。source archiveは公式リポジトリの`mingw/sources`に置かれ、一般に`{pkgbase}-{version}.src.tar.zst`という名前です。binary packageの環境付き名称と`pkgbase`を混同せず、実際に配るバージョンに対応するものを取得します。
 
+Run #3の所有者判定失敗は、Windows版Pythonの標準出力のCRLFをBashが読み込み、パス末尾にCRが残ることで再現しました。中間ファイルを明示的にUTF-8/LFで生成し、制御文字を拒否します。[修正後のRun #4](https://github.com/sunnytruck/MirrorDock/actions/runs/39744662638)で、`bin/avcodec-63.dll`の所有者は`mingw-w64-ucrt-x86_64-ffmpeg`と確認しました。公式の9.0.2-1バイナリアーカイブでも、同DLLは通常ファイルです。
+
+Run #4で判明した別の失敗は、`setup-msys2`がセットアップ終了時に`pacman -Scc`でキャッシュを消去することでした。収集処理は`pacman-conf CacheDir`を参照し、空の場合は導入済みと完全に同じ版だけを`pacman -Sw`で再取得します。信頼済み署名を必須とする設定と`.PKGINFO`を照合し、別版への置換やパッケージ更新はしません。MSYS2のepoch区切り`~`も版数に保持します。
+
+公式FFmpeg 9.0.2-1バイナリパッケージには`share/licenses`の本文がないことを実物で確認しました。対応ソースの`ffmpeg-9.0.2.tar.xz`には`LICENSE.md`とGPL/LGPL本文4件が存在するため、このパッケージと`spdx:GPL-3.0-or-later`の組み合わせに限り、その5文書を原文のまま収集します。`source-provenance.json`に取得元・各SHA-256を記録します。未確認のパッケージにこの例外を適用せず、本文不足・曖昧な配置・リンクは失敗にします。
+
 ## 所有者検索の改行境界（Run #3の修正）
 
 Run #3はUxPlayのリンク・DLL収集まで成功し、`pacman -Qqo`が`avcodec-63.dll`を見つけられず停止しました。元コードはUCRT64版Pythonの`print()`をリダイレクトして一覧を作り、Bashの`read -r`で読み取っていました。Windowsの標準テキスト出力がCRLFを生成するため、Bashの検索引数には末尾CRが残ります。

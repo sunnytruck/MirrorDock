@@ -10,6 +10,8 @@ inventory=$2
 sources=$3
 upstream=$4
 mkdir -p "$sources/msys2" "$sources/binary-metadata" "$sources/build-scripts"
+source scripts/engine/package_archive.sh
+package_cache="$(dirname "$sources")/package-cache"
 fail() {
   local message=$1
   message=${message//'%'/'%25'}
@@ -40,17 +42,14 @@ printf 'package\tversion\tpkgbase\tsource_archive\tlicenses\n' > "$sources/packa
 while IFS= read -r name; do
   read -r installed_name installed_version < <(pacman -Q "$name")
   test "$installed_name" = "$name"
-  # Pacman filenames omit a possible version epoch; .PKGINFO preserves it.
-  filename_version=${installed_version#*:}
-  mapfile -t candidates < <(find /var/cache/pacman/pkg -maxdepth 1 -type f -name "${name}-${filename_version}-*.pkg.tar.*" ! -name '*.sig')
-  if [ "${#candidates[@]}" -ne 1 ]; then
-    fail "Expected one exact cached package for $name $installed_version, found ${#candidates[@]}"
+  if ! package_archive=$(obtain_package_archive "$name" "$installed_version" "$package_cache"); then
+    fail "Cannot obtain a verified exact archive for $name $installed_version"
   fi
   metadata="$sources/binary-metadata/$name.PKGINFO"
-  bsdtar -xOf "${candidates[0]}" .PKGINFO > "$metadata"
-  bsdtar -tf "${candidates[0]}" > "$sources/binary-metadata/$name.contents.txt"
+  bsdtar -xOf "$package_archive" .PKGINFO > "$metadata"
+  bsdtar -tf "$package_archive" > "$sources/binary-metadata/$name.contents.txt"
   if grep -qx '.BUILDINFO' "$sources/binary-metadata/$name.contents.txt"; then
-    bsdtar -xOf "${candidates[0]}" .BUILDINFO > "$sources/binary-metadata/$name.BUILDINFO"
+    bsdtar -xOf "$package_archive" .BUILDINFO > "$sources/binary-metadata/$name.BUILDINFO"
   fi
   pkgname=$(awk -F ' = ' '$1=="pkgname" {print $2; exit}' "$metadata")
   pkgbase=$(awk -F ' = ' '$1=="pkgbase" {print $2; exit}' "$metadata")
@@ -58,8 +57,9 @@ while IFS= read -r name; do
   test "$pkgname" = "$name"
   test "$pkgver" = "$installed_version"
   [[ "$pkgbase" =~ ^[a-zA-Z0-9_+.-]+$ ]]
-  [[ "${pkgver#*:}" =~ ^[a-zA-Z0-9_+.-]+$ ]]
-  archive="${pkgbase}-${pkgver#*:}.src.tar.zst"
+  [[ "$pkgver" =~ ^[a-zA-Z0-9_+~.-]+$ ]] || fail "Invalid MSYS2 source version for $name"
+  # MSYS2 uses '~' for epochs in both binary and source archive versions.
+  archive="${pkgbase}-${pkgver}.src.tar.zst"
   if [ ! -f "$sources/msys2/$archive" ]; then
     if ! curl --fail --location --show-error --retry 2 "https://repo.msys2.org/mingw/sources/$archive" -o "$sources/msys2/$archive"; then
       fail "Matching source archive download failed: $archive"
@@ -87,7 +87,13 @@ while IFS= read -r name; do
     esac
   done < <(pacman -Qlq "$name")
   if [ "$license_count" -eq 0 ]; then
-    fail "No package-provided license notices for $name; do not publish until reviewed"
+    # The official FFmpeg binary package has no share/licenses files. Only the
+    # explicitly audited package/license combination may use original notices
+    # from its exact matching source archive; unknown packages still fail.
+    if ! python scripts/engine/source_notices.py "$pkgbase" "$pkgver" \
+      "$sources/msys2/$archive" "$runtime/share/licenses/$name" "$licenses"; then
+      fail "No package-provided or audited corresponding-source notices for $name; refusing to publish"
+    fi
   fi
 done < "$sources/packages.txt"
 mkdir -p "$runtime/share/licenses/UxPlay"
