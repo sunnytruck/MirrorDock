@@ -20,7 +20,7 @@
 **Windows・iPhoneでの受信は未検証です。実験版であり、動作を保証しません。** 初版のJavaアプリのWindows CI成功と、今回追加したエンジン配布CIの成功は別です。
 
 1. [ActionsのWindows package](https://github.com/sunnytruck/MirrorDock/actions/workflows/windows.yml) で、今回の変更を含む成功した実行を開きます。Artifactsの`MirrorDock-Windows`をダウンロード・展開し、EXEをインストールします。Javaは同梱されています。
-2. [Actionsのエンジン配布](https://github.com/sunnytruck/MirrorDock/actions/workflows/engine.yml) で成功した実行を開き、エンジンのArtifactsをダウンロード・展開します。**成功したエンジンCIがない場合は、この方式の配布物はまだ利用できません。** ソースコード用ZIPや上流のSource code ZIPではありません。
+2. [成功したRun #8のエンジンArtifacts](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066/artifacts/12414019562) をダウンロード・展開します。後続版は[Actionsのエンジン配布](https://github.com/sunnytruck/MirrorDock/actions/workflows/engine.yml)で成功した実行から取得してください。ソースコード用ZIPや上流のSource code ZIPではありません。
 3. MirrorDockの「受信エンジンの導入・診断」→「エンジンZIPを導入」で、内側の`MirrorDock-Engine-Windows.zip`を選択します。GUIが検査・展開してパスを保存します。MSYS2やコンパイラーは不要です。
 4. 「受信エンジンを診断」を押します。ヘルプ起動、Windowsの既知のDLLエラー、標準ファイアウォールのルールを確認します。成功してもiPhone接続を保証しません。
 5. 「受信開始」。同じ家庭内LANのiPhoneで「画面ミラーリング」→「MirrorDock」を選択します。

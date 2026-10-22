@@ -17,6 +17,8 @@
 
 Windows CIでのビルド・テスト・パッケージ作成の成功は、iPhoneからの検出・接続や映像・音声の動作成功を示しません。**Windows PCとiPhoneを使う実機検証は未実施であり、動作は保証しません。** 配布経路や構築成功の確認状況は、対象コミットのCI結果とREADME/INSTALLで確認してください。
 
+[Run #8（fa2510f）](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066)でPython 52件、UxPlayのビルド、DLL収集、対応ソース・通知収集、隔離環境でのhelp/プラグイン検査、ZIP生成・検証・Artifacts公開が成功しました。`.github/workflows/verify-engine-artifact.yml`では、公開済みArtifactsを再ダウンロードし、実行用ZIP・対応ソースZIPのSHA-256とpackage対応表を照合できます。
+
 ## runtimeと対応ソースを一緒に配布する
 
 UxPlayはGPLv3です。バイナリの再配布は禁止されていませんが、単に実行ファイルとDLLをコピーすれば条件を満たすわけではありません。今回の配布方針はGPLv3第6節dのネットワーク配布を想定し、次を同じダウンロード場所に置くことです。

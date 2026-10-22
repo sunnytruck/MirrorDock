@@ -1,0 +1,64 @@
+name: Verify published engine artifact
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Experimental Windows engine run ID
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download published runtime and corresponding sources
+        uses: actions/download-artifact@v4
+        with:
+          name: MirrorDock-Engine-Windows-and-Sources
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+          path: downloaded
+      - name: Verify downloaded runtime ZIP
+        run: python scripts/engine/bundle.py --verify-archive downloaded/MirrorDock-Engine-Windows.zip
+      - name: Verify corresponding-source ZIP and runtime mappings
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import zipfile
+          with zipfile.ZipFile('downloaded/MirrorDock-Engine-Windows.zip') as runtime, zipfile.ZipFile('downloaded/MirrorDock-Engine-Corresponding-Source.zip') as sources:
+              entries = sources.infolist()
+              names = [entry.filename for entry in entries if not entry.is_dir()]
+              if len(names) != len(set(names)):
+                  raise RuntimeError('Duplicate corresponding-source ZIP entry')
+              manifest = sources.read('files.sha256').decode('utf-8').splitlines()
+              expected = {}
+              for line in manifest:
+                  digest, name = line.split('  ', 1)
+                  if name in expected or len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
+                      raise RuntimeError('Invalid corresponding-source manifest')
+                  expected[name] = digest
+              if set(expected) != set(names) - {'files.sha256'}:
+                  raise RuntimeError('Corresponding-source ZIP does not match its manifest')
+              for name, digest in expected.items():
+                  calculated = hashlib.sha256()
+                  with sources.open(name) as data:
+                      for block in iter(lambda: data.read(1024 * 1024), b''):
+                          calculated.update(block)
+                  if calculated.hexdigest() != digest:
+                      raise RuntimeError('Corresponding-source checksum mismatch: ' + name)
+              for name in ('packages.tsv', 'file-packages.tsv'):
+                  if runtime.read(name) != sources.read(name):
+                      raise RuntimeError('Runtime and corresponding-source mapping differ: ' + name)
+              print('Downloaded corresponding-source ZIP verified:', len(expected), 'files; runtime mappings agree')
+          PY
+      - name: Report download verification
+        shell: pwsh
+        env:
+          ENGINE_RUN: ${{ inputs.run_id }}
+        run: |
+          "Published engine run $env:ENGINE_RUN was downloaded using actions/download-artifact. Runtime SHA256, source SHA256, ZIP CRC and package mappings passed. Physical iPhone receiving remains untested." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
