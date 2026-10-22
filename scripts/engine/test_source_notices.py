@@ -95,6 +95,49 @@ class SourceNoticesTest(unittest.TestCase):
                     collect_notices('mingw-w64-ffmpeg', '1:9.0.2-1', root / 'source', root / 'notices', 'spdx:GPL-3.0-or-later')
                 execute.assert_not_called()
 
+    def pinned_fixture(self, root):
+        outer, inner, payloads, original, names = self.source_fixture(root)
+        profile = {
+            'pkgbase': 'reviewed-package', 'pkgver': '9.0.2-1',
+            'declared_licenses': ['reviewed-license'],
+            'outer_archive': {'sha256': hashlib.sha256(outer.read_bytes()).hexdigest()},
+            'inner_archive': {'member': original, 'sha256': hashlib.sha256(inner).hexdigest()},
+            'notices': [{'member': 'ffmpeg-9.0.2/' + name, 'filename': name,
+                         'sha256': hashlib.sha256(payload).hexdigest(), 'size': len(payload)}
+                        for name, payload in payloads.items()],
+        }
+        registry = root / 'profiles.json'
+        registry.write_text(json.dumps({'reviewed-package': profile}), encoding='utf-8')
+        return outer, inner, payloads, original, names, registry, profile
+
+    def test_pinned_profile_requires_exact_version_license_and_source_bytes(self):
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            outer, inner, payloads, original, names, registry, profile = self.pinned_fixture(root)
+            with patch('source_notices.PROFILES_PATH', registry), patch('source_notices.subprocess.run', side_effect=self.bsdtar(inner, original, names)):
+                self.assertEqual(5, collect_notices('reviewed-package', '9.0.2-1', outer, root / 'valid', 'reviewed-license;'))
+                for version, license_name in [('9.0.3-1', 'reviewed-license'), ('9.0.2-1', 'other-license')]:
+                    with self.subTest(version=version, license=license_name), self.assertRaises(RuntimeError):
+                        collect_notices('reviewed-package', version, outer, root / 'invalid', license_name)
+                outer.write_bytes(b'changed corresponding source')
+                with self.assertRaises(RuntimeError):
+                    collect_notices('reviewed-package', '9.0.2-1', outer, root / 'invalid', 'reviewed-license')
+                self.assertFalse((root / 'invalid').exists())
+
+    def test_pinned_profile_rejects_changed_inner_archive_and_notice(self):
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            outer, inner, payloads, original, names, registry, profile = self.pinned_fixture(root)
+            original_digest = profile['inner_archive']['sha256']
+            for field in ('inner', 'notice'):
+                profile['inner_archive']['sha256'] = '0' * 64 if field == 'inner' else original_digest
+                profile['notices'][0]['sha256'] = '0' * 64
+                registry.write_text(json.dumps({'reviewed-package': profile}), encoding='utf-8')
+                with self.subTest(field=field), patch('source_notices.PROFILES_PATH', registry), patch('source_notices.subprocess.run', side_effect=self.bsdtar(inner, original, names)):
+                    with self.assertRaises(RuntimeError):
+                        collect_notices('reviewed-package', '9.0.2-1', outer, root / 'invalid', 'reviewed-license')
+                    self.assertFalse((root / 'invalid').exists())
+
     def test_unknown_package_and_unaudited_license_fail_before_reading_archive(self):
         with tempfile.TemporaryDirectory() as value:
             root = Path(value)

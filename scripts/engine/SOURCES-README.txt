@@ -21,11 +21,14 @@ setup-msys2 clears its package cache after setup. The collector obtains only
 the exact installed binary package version with pacman's required trusted
 signature policy, and rechecks .PKGINFO; it never installs or upgrades packages.
 
-The audited MSYS2 FFmpeg binary package lacks share/licenses files. For that
-package and its GPL-3.0-or-later declaration only, original FFmpeg license texts
-are copied from the exact corresponding source archive. source-provenance.json
-beside those notices records outer/inner archive and notice SHA256 values.
-No generic exception for packages without license notices is permitted.
+Some MSYS2 binary packages lack share/licenses files. Audited combinations in
+build-scripts/engine/audited-source-notices.json pin the package/version/license,
+source archive SHA256, original archive or Git commit, and every notice SHA256.
+Original texts are copied without executing PKGBUILD, Git hooks or archive code.
+FFmpeg additionally validates its exact original version and all five required
+license documents. source-provenance.json beside the recovered notices records
+the archive/commit and notice hashes. Unknown or changed combinations fail;
+there is no generic exception for packages without license notices.
 
 No source archive or license may be omitted to make a failed packaging step pass.
 If an exact source archive is unavailable, packaging must fail rather than upload.

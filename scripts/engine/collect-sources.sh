@@ -87,9 +87,9 @@ while IFS= read -r name; do
     esac
   done < <(pacman -Qlq "$name")
   if [ "$license_count" -eq 0 ]; then
-    # The official FFmpeg binary package has no share/licenses files. Only the
-    # explicitly audited package/license combination may use original notices
-    # from its exact matching source archive; unknown packages still fail.
+    # Some official binary packages omit share/licenses. Only explicitly audited
+    # package/version/license/source combinations may recover original notices
+    # from their exact matching source archive; unknown packages still fail.
     if ! python scripts/engine/source_notices.py "$pkgbase" "$pkgver" \
       "$sources/msys2/$archive" "$runtime/share/licenses/$name" "$licenses"; then
       fail "No package-provided or audited corresponding-source notices for $name; refusing to publish"

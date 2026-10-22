@@ -1,0 +1,1116 @@
+{
+  "mingw-w64-gmp": {
+    "pkgbase": "mingw-w64-gmp",
+    "pkgver": "6.3.0-2",
+    "declared_licenses": [
+      "LGPL3",
+      "GPL"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gmp-6.3.0-2.src.tar.zst",
+      "sha256": "f288f944fd9609db220bcf6a8dd0703a5674eeb906ef35eb8485bb8192135994"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gmp/gmp-6.3.0.tar.xz",
+      "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898"
+    },
+    "notices": [
+      {
+        "member": "gmp-6.3.0/COPYING",
+        "filename": "COPYING",
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+        "size": 35147
+      },
+      {
+        "member": "gmp-6.3.0/COPYING.LESSERv3",
+        "filename": "COPYING.LESSERv3",
+        "sha256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+        "size": 7639
+      },
+      {
+        "member": "gmp-6.3.0/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "da5870e2f0482c5dc15b4cfed8bbfb51ce1279c8f8fc52bdb8c13c7cee949c32",
+        "size": 4098
+      },
+      {
+        "member": "gmp-6.3.0/COPYINGv3",
+        "filename": "COPYINGv3",
+        "sha256": "e6037104443f9a7829b2aa7c5370d0789a7bda3ca65a0b904cdc0c2e285d9195",
+        "size": 35150
+      },
+      {
+        "member": "gmp-6.3.0/COPYINGv2",
+        "filename": "COPYINGv2",
+        "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+        "size": 18092
+      }
+    ],
+    "audit_notes": [
+      "gmp-6.3.0/COPYING:                     GNU GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies",
+      "gmp-6.3.0/COPYING.LESSERv3: \t\t   GNU LESSER GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies",
+      "gmp-6.3.0/AUTHORS: Authors of GNU MP (in chronological order of initial contribution) |  | Torbj\u00f6rn Granlund\tMain author |  | John Amanatides\t\tOriginal version of mpz/pprime_p.c",
+      "gmp-6.3.0/COPYINGv3:                     GNU GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies",
+      "gmp-6.3.0/COPYINGv2:                     GNU GENERAL PUBLIC LICENSE |                        Version 2, June 1991 |  |  Copyright (C) 1989, 1991 Free Software Foundation, Inc., |  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA"
+    ]
+  },
+  "mingw-w64-gnutls": {
+    "pkgbase": "mingw-w64-gnutls",
+    "pkgver": "3.8.13-3",
+    "declared_licenses": [
+      "spdx:GPL-3.0-or-later",
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gnutls-3.8.13-3.src.tar.zst",
+      "sha256": "7889cd73810d909642c0f122b40cfe0eaec5b0d2985804f145cd90c6a51c0435"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gnutls/gnutls-3.8.13.tar.xz",
+      "sha256": "ffed8ec1bf09c2426d4f14aae377de4753b53e537d685e604e99a8b16ca9c97e"
+    },
+    "notices": [
+      {
+        "member": "gnutls-3.8.13/COPYING",
+        "filename": "COPYING",
+        "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+        "size": 35149
+      },
+      {
+        "member": "gnutls-3.8.13/COPYING.LESSERv2",
+        "filename": "COPYING.LESSERv2",
+        "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+        "size": 26419
+      },
+      {
+        "member": "gnutls-3.8.13/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "79bca1136dc515b930f2f85975c0c4c687e7d430be27a9b59113637c33b8e7a3",
+        "size": 11500
+      },
+      {
+        "member": "gnutls-3.8.13/README.md",
+        "filename": "README.md",
+        "sha256": "5e4aca90e8e08e47558dfd21e2a42251a139242b0016a06708739eeb8f0da60c",
+        "size": 9367
+      },
+      {
+        "member": "gnutls-3.8.13/lib/accelerated/x86/license.txt",
+        "filename": "CRYPTOGAMS-license.txt",
+        "sha256": "0c35a52bcfa4da2f0df4a1282a6034e211c976b8b6d43691a639eef9c8aebf7e",
+        "size": 2463
+      },
+      {
+        "member": "gnutls-3.8.13/lib/inih/LICENSE.txt",
+        "filename": "inih-LICENSE.txt",
+        "sha256": "9ae3b39e83e9158e44b67733baa3bb2d84e80efdcfb14a5820210a42c7abdf7f",
+        "size": 1510
+      },
+      {
+        "member": "gnutls-3.8.13/lib/crau/LICENSE",
+        "filename": "crau-LICENSE",
+        "sha256": "b3c9aed2f5750f6bf698c74916d675d1734e12455b96bfdf6f90e23ab01595cd",
+        "size": 1067
+      },
+      {
+        "member": "gnutls-3.8.13/lib/crau/UNLICENSE",
+        "filename": "crau-UNLICENSE",
+        "sha256": "b5065838cbac452dfc855ba6e6e031481ad2c68406f70d21ead9321374653e6c",
+        "size": 1212
+      }
+    ],
+    "audit_notes": [
+      "Official matching MSYS2 allsource archive fetched over HTTPS; original tar checksum equals PKGBUILD first sha256sum.",
+      "GnuTLS README.md Licensing section states main libraries LGPLv2.1-or-later and other programs GPLv3-or-later, and warns about nettle/gmp downstream licensing. COPYING (GPLv3), COPYING.LESSERv2 (LGPLv2.1), AUTHORS and README are preserved. Included CRYPTOGAMS, inih BSD, crau MIT/Unlicense notices to retain bundled subcomponent notices. Documentation-only FDL chapter is not copied."
+    ]
+  },
+  "mingw-w64-gst-libav": {
+    "pkgbase": "mingw-w64-gst-libav",
+    "pkgver": "1.28.8-1",
+    "declared_licenses": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gst-libav-1.28.8-1.src.tar.zst",
+      "sha256": "b4e8f9be50ea7ffdd504c4f022fa58d40995edb4630ea1994e8c0e9691923d59"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gst-libav/gst-libav-1.28.8.tar.xz",
+      "sha256": "98ad3d7f8932c495e268708903f1c3388d5f26a0db34727a9f861ee23b724177"
+    },
+    "notices": [
+      {
+        "member": "gst-libav-1.28.8/COPYING",
+        "filename": "COPYING",
+        "sha256": "ad2eec519ebd4b5df86ea84dff24ae3bfa2edea846a703b58902dd221ae375db",
+        "size": 26431
+      },
+      {
+        "member": "gst-libav-1.28.8/README.md",
+        "filename": "README.md",
+        "sha256": "a8826e9a36ab50ed922468224ee3046c8c4fc3df6cbd49ee9c4f44bc9313adbe",
+        "size": 21277
+      }
+    ],
+    "audited_binary_packages": [
+      "mingw-w64-ucrt-x86_64-gst-libav"
+    ],
+    "declarations": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "audit_notes": [
+      "Official exact MSYS2 allsource archive downloaded over verified HTTPS. Embedded original source archive SHA256 matches PKGBUILD first sha256sum; source .SRCINFO pkgbase/version matches binary metadata.",
+      "COPYING inspected and contains LGPL version 2.1 text; README and static-linking guidance, if present, retained verbatim. No PKGBUILD or source code was executed during audit.",
+      "This notice covers the LGPL GStreamer libav plugin itself. Actual linked FFmpeg has its own GPL-enabled recipe and independently audited notices/source; do not label the combined runtime LGPL-only."
+    ]
+  },
+  "mingw-w64-gst-plugins-bad": {
+    "pkgbase": "mingw-w64-gst-plugins-bad",
+    "pkgver": "1.28.8-2",
+    "declared_licenses": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gst-plugins-bad-1.28.8-2.src.tar.zst",
+      "sha256": "34686999214bacbf840a0eb95cd45f06dc4ab90e8369abe3bf72f26f1573343d"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gst-plugins-bad/gst-plugins-bad-1.28.8.tar.xz",
+      "sha256": "670d888bde8242579b0d8e91f60cf337aa7be20ca7c315ebfbdd6e5a9218d104"
+    },
+    "notices": [
+      {
+        "member": "gst-plugins-bad-1.28.8/COPYING",
+        "filename": "COPYING",
+        "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+        "size": 26530
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/README.md",
+        "filename": "README.md",
+        "sha256": "a8826e9a36ab50ed922468224ee3046c8c4fc3df6cbd49ee9c4f44bc9313adbe",
+        "size": 21277
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/README.static-linking",
+        "filename": "README.static-linking",
+        "sha256": "2958ebeac0f5a5bd05a0178d6fddef2f003c69a94213c3cf7374c004b5127642",
+        "size": 7796
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/ext/sctp/usrsctp/LICENSE.md",
+        "filename": "sctp-usrsctp-LICENSE.md",
+        "sha256": "fa53711b25af4b9a9b8dadfea3cb38166ec4b96760c8d62b284055554537d9ef",
+        "size": 1500
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/gst-libs/gst/codecparsers/dboolhuff.AUTHORS",
+        "filename": "codecparsers-dboolhuff.AUTHORS",
+        "sha256": "4ddba5f071c288576903bce26a38e3430c2e94cc26f5ab4fd22ce43c98fae64b",
+        "size": 3628
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/gst-libs/gst/codecparsers/dboolhuff.LICENSE",
+        "filename": "codecparsers-dboolhuff.LICENSE",
+        "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "size": 1537
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/sys/directshow/strmbase/LICENSE",
+        "filename": "directshow-strmbase-LICENSE",
+        "sha256": "49885c38b55a2020f72af1d4b3c76059a778bf2e2cb6871ed3e11c268995f98f",
+        "size": 1255
+      },
+      {
+        "member": "gst-plugins-bad-1.28.8/sys/dwrite/libcaption/LICENSE.txt",
+        "filename": "dwrite-libcaption-LICENSE.txt",
+        "sha256": "33738b27547a48e4164c86db9f85d0f735a388c2d171326b548768ee18ad3694",
+        "size": 1126
+      }
+    ],
+    "audited_binary_packages": [
+      "mingw-w64-ucrt-x86_64-gst-plugins-bad",
+      "mingw-w64-ucrt-x86_64-gst-plugins-bad-libs"
+    ],
+    "declarations": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "audit_notes": [
+      "Official exact MSYS2 allsource archive downloaded over verified HTTPS. Embedded original source archive SHA256 matches PKGBUILD first sha256sum; source .SRCINFO pkgbase/version matches binary metadata.",
+      "COPYING inspected and contains LGPL version 2.1 text; README and static-linking guidance, if present, retained verbatim. No PKGBUILD or source code was executed during audit.",
+      "This source package also owns gst-plugins-bad-libs at the same exact version, so one pkgbase/version profile covers both binary packages.",
+      "Recipe explicitly enables GPL features; package-level LGPL metadata is not a statement that every plugin or dependency is LGPL. Preserve actual runtime DLL/source mappings and other component notices.",
+      "Additional complete notices retained: usrsctp BSD, codecparsers WebM BSD and AUTHORS, DirectShow Microsoft MIT, dwrite libcaption Twitch MIT. Some belong to plugins outside the limited runtime seeds; including them does not establish which plugins were shipped."
+    ]
+  },
+  "mingw-w64-gst-plugins-base": {
+    "pkgbase": "mingw-w64-gst-plugins-base",
+    "pkgver": "1.28.8-1",
+    "declared_licenses": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gst-plugins-base-1.28.8-1.src.tar.zst",
+      "sha256": "ffb5dbea35ff2e41018c519c84194f0ff7f9c63dd85e7fba6a2ce94dbeaad07a"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gst-plugins-base/gst-plugins-base-1.28.8.tar.xz",
+      "sha256": "ade70e3381fcbb024f1f20aa9ede9b5654aeed39d5bd70b1a98f53015e501117"
+    },
+    "notices": [
+      {
+        "member": "gst-plugins-base-1.28.8/COPYING",
+        "filename": "COPYING",
+        "sha256": "ad2eec519ebd4b5df86ea84dff24ae3bfa2edea846a703b58902dd221ae375db",
+        "size": 26431
+      },
+      {
+        "member": "gst-plugins-base-1.28.8/README.md",
+        "filename": "README.md",
+        "sha256": "a8826e9a36ab50ed922468224ee3046c8c4fc3df6cbd49ee9c4f44bc9313adbe",
+        "size": 21277
+      },
+      {
+        "member": "gst-plugins-base-1.28.8/README.static-linking",
+        "filename": "README.static-linking",
+        "sha256": "2958ebeac0f5a5bd05a0178d6fddef2f003c69a94213c3cf7374c004b5127642",
+        "size": 7796
+      }
+    ],
+    "audited_binary_packages": [
+      "mingw-w64-ucrt-x86_64-gst-plugins-base"
+    ],
+    "declarations": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "audit_notes": [
+      "Official exact MSYS2 allsource archive downloaded over verified HTTPS. Embedded original source archive SHA256 matches PKGBUILD first sha256sum; source .SRCINFO pkgbase/version matches binary metadata.",
+      "COPYING inspected and contains LGPL version 2.1 text; README and static-linking guidance, if present, retained verbatim. No PKGBUILD or source code was executed during audit."
+    ]
+  },
+  "mingw-w64-gst-plugins-good": {
+    "pkgbase": "mingw-w64-gst-plugins-good",
+    "pkgver": "1.28.8-1",
+    "declared_licenses": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gst-plugins-good-1.28.8-1.src.tar.zst",
+      "sha256": "9d7336e565acbb4c6e2c65a865100c33ed0b8b0bdcb8c7fa09af3d4cfe603d5e"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gst-plugins-good/gst-plugins-good-1.28.8.tar.xz",
+      "sha256": "a7670ed900d3d03be744d25c1873b239896e9a82ce6d17f8febc6fffbaee9521"
+    },
+    "notices": [
+      {
+        "member": "gst-plugins-good-1.28.8/COPYING",
+        "filename": "COPYING",
+        "sha256": "6095e9ffa777dd22839f7801aa845b31c9ed07f3d6bf8a26dc5d2dec8ccc0ef3",
+        "size": 26432
+      },
+      {
+        "member": "gst-plugins-good-1.28.8/README.md",
+        "filename": "README.md",
+        "sha256": "a8826e9a36ab50ed922468224ee3046c8c4fc3df6cbd49ee9c4f44bc9313adbe",
+        "size": 21277
+      },
+      {
+        "member": "gst-plugins-good-1.28.8/README.static-linking",
+        "filename": "README.static-linking",
+        "sha256": "2958ebeac0f5a5bd05a0178d6fddef2f003c69a94213c3cf7374c004b5127642",
+        "size": 7796
+      },
+      {
+        "member": "gst-plugins-good-1.28.8/gst/rtp/dboolhuff.LICENSE",
+        "filename": "rtp-dboolhuff.LICENSE",
+        "sha256": "e293d1dddc9785200b1f58a4f5293543cf8566d9e0b8a3c02fad955035b19f42",
+        "size": 1495
+      },
+      {
+        "member": "gst-plugins-good-1.28.8/gst/rtsp/COPYING.MIT",
+        "filename": "rtsp-COPYING.MIT",
+        "sha256": "0efdd7e1522b73c4a206ab2fb1bb8a609157abccf588837bca6eb7c98d5b35c6",
+        "size": 1156
+      }
+    ],
+    "audited_binary_packages": [
+      "mingw-w64-ucrt-x86_64-gst-plugins-good"
+    ],
+    "declarations": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "audit_notes": [
+      "Official exact MSYS2 allsource archive downloaded over verified HTTPS. Embedded original source archive SHA256 matches PKGBUILD first sha256sum; source .SRCINFO pkgbase/version matches binary metadata.",
+      "COPYING inspected and contains LGPL version 2.1 text; README and static-linking guidance, if present, retained verbatim. No PKGBUILD or source code was executed during audit.",
+      "Also retains complete RTP dboolhuff Google BSD and RTSP MIT notices from this exact source. The source package includes plugins beyond the selected runtime seeds."
+    ]
+  },
+  "mingw-w64-gstreamer": {
+    "pkgbase": "mingw-w64-gstreamer",
+    "pkgver": "1.28.8-1",
+    "declared_licenses": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gstreamer-1.28.8-1.src.tar.zst",
+      "sha256": "c5331bd61a2e5b4cb11d83fb82e9c5dae8748b902722c86cfffd364ecca56313"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-gstreamer/gstreamer-1.28.8.tar.xz",
+      "sha256": "baa8e86985ad6417cc0ad6e7b79ff2884c6779c8b1c7a6240e7121822c86e524"
+    },
+    "notices": [
+      {
+        "member": "gstreamer-1.28.8/COPYING",
+        "filename": "COPYING",
+        "sha256": "ad2eec519ebd4b5df86ea84dff24ae3bfa2edea846a703b58902dd221ae375db",
+        "size": 26431
+      },
+      {
+        "member": "gstreamer-1.28.8/README.md",
+        "filename": "README.md",
+        "sha256": "a8826e9a36ab50ed922468224ee3046c8c4fc3df6cbd49ee9c4f44bc9313adbe",
+        "size": 21277
+      },
+      {
+        "member": "gstreamer-1.28.8/README.static-linking",
+        "filename": "README.static-linking",
+        "sha256": "2958ebeac0f5a5bd05a0178d6fddef2f003c69a94213c3cf7374c004b5127642",
+        "size": 7796
+      }
+    ],
+    "audited_binary_packages": [
+      "mingw-w64-ucrt-x86_64-gstreamer"
+    ],
+    "declarations": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "audit_notes": [
+      "Official exact MSYS2 allsource archive downloaded over verified HTTPS. Embedded original source archive SHA256 matches PKGBUILD first sha256sum; source .SRCINFO pkgbase/version matches binary metadata.",
+      "COPYING inspected and contains LGPL version 2.1 text; README and static-linking guidance, if present, retained verbatim. No PKGBUILD or source code was executed during audit."
+    ]
+  },
+  "mingw-w64-lame": {
+    "package": "mingw-w64-ucrt-x86_64-lame",
+    "pkgbase": "mingw-w64-lame",
+    "inner_archive": {
+      "member": "mingw-w64-lame/lame-3.100.tar.gz",
+      "sha256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+    },
+    "notices": [
+      {
+        "member": "lame-3.100/COPYING",
+        "filename": "COPYING",
+        "sha256": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
+        "size": 25284
+      },
+      {
+        "member": "lame-3.100/LICENSE",
+        "filename": "LICENSE",
+        "sha256": "7a40cbd8818c57e5285e83c772a459a996d1662c824a879836b97b473c07cae4",
+        "size": 487
+      },
+      {
+        "member": "lame-3.100/README",
+        "filename": "README",
+        "sha256": "687ad59451fddafba33340222a5c5820a99b62249d69b25a3667b396bd623d10",
+        "size": 1715
+      },
+      {
+        "member": "lame-3.100/mpglib/README",
+        "filename": "README.mpglib",
+        "sha256": "3684eead8c237fba07b4110d9e99159bbf15c0ea381c9c547cd39d8d43f093d2",
+        "size": 907
+      },
+      {
+        "member": "lame-3.100/mpglib/AUTHORS",
+        "filename": "AUTHORS.mpglib",
+        "sha256": "d8ecf9556aafa8c653796d6be3dc43deea374257680e21c30109a5c3c4484263",
+        "size": 604
+      }
+    ],
+    "audit": "COPYING is GNU Library GPL version 2. LICENSE gives LAME acknowledgement and website instructions. README preserves project, Mark Taylor, Michael Cheng and Michael Hipp copyright notices. README contains a historical claim that mpglib is GPL; its bundled mpglib/README instead identifies current hip as LGPL and mpglib/common.c explicitly grants LGPL version 2 or later. Both README statements are retained, without rewriting upstream texts or upgrading package license claims. Other permissive-header findings are build/install-sh and the separate ACM codec frontend, not libmp3lame.dll compilation units. Complete matching source including all headers and patches remains distributed.",
+    "pkgver": "3.100-3",
+    "outer_archive": {
+      "filename": "mingw-w64-lame-3.100-3.src.tar.zst",
+      "sha256": "dfd51143ea25aa0b67f5d355127b8a89a27379b1b128f0b2f9eed7c3327656ab",
+      "url": "https://repo.msys2.org/mingw/sources/mingw-w64-lame-3.100-3.src.tar.zst"
+    },
+    "declared_licenses": [
+      "LGPL"
+    ]
+  },
+  "mingw-w64-libass": {
+    "pkgbase": "mingw-w64-libass",
+    "pkgver": "0.17.5-1",
+    "declared_licenses": [
+      "spdx:ISC"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libass-0.17.5-1.src.tar.zst",
+      "sha256": "4a68edae2c1454ffcf7cf0a6fccf6930c876caa5fe2422cdb0b34d1fc0f5fb03"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libass/libass-0.17.5.tar.xz",
+      "sha256": "2dca25c0e0c837ddf00b52011b3f82cac1e4ddd3ad018227806b0c2288864acc"
+    },
+    "notices": [
+      {
+        "member": "libass-0.17.5/COPYING",
+        "filename": "COPYING",
+        "sha256": "f7e30699d02798351e7f839e3d3bfeb29ce65e44efa7735c225464c4fd7dfe9c",
+        "size": 755
+      }
+    ],
+    "audit_notes": [
+      "libass-0.17.5/COPYING: ISC License |  | Copyright (C) 2006-2016 libass contributors |  | Permission to use, copy, modify, and/or distribute this software for any"
+    ]
+  },
+  "mingw-w64-libidn2": {
+    "pkgbase": "mingw-w64-libidn2",
+    "pkgver": "2.3.8-4",
+    "declared_licenses": [
+      "spdx:GPL-2.0-or-later",
+      "spdx:LGPL-3.0-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libidn2-2.3.8-4.src.tar.zst",
+      "sha256": "cd83e8514fbeb6a4499299b88691b9b9ecc3114cca1e2be4f6c54aab6ae9ddd0"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libidn2/libidn2-2.3.8.tar.gz",
+      "sha256": "f557911bf6171621e1f72ff35f5b1825bb35b52ed45325dcdee931e5d3c0787a"
+    },
+    "notices": [
+      {
+        "member": "libidn2-2.3.8/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "7719304df806ca5cd68c1f1c7e0139e0c11ed14fede560ae192d3c4d1989e839",
+        "size": 212
+      },
+      {
+        "member": "libidn2-2.3.8/COPYING",
+        "filename": "COPYING",
+        "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+        "size": 35149
+      },
+      {
+        "member": "libidn2-2.3.8/COPYING.LESSERv3",
+        "filename": "COPYING.LESSERv3",
+        "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+        "size": 7652
+      },
+      {
+        "member": "libidn2-2.3.8/COPYING.unicode",
+        "filename": "COPYING.unicode",
+        "sha256": "01d621eef165cf4d3d3dbb737aa0699178d94c6f18cf87e9dde6db3ca7790f46",
+        "size": 8782
+      },
+      {
+        "member": "libidn2-2.3.8/COPYINGv2",
+        "filename": "COPYINGv2",
+        "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+        "size": 17984
+      }
+    ],
+    "audit_notes": [
+      "libidn2-2.3.8/AUTHORS: Original author: |  Simon Josefsson <simon@josefsson.org> |  | Maintainers (ordered by # of commits): |  Simon Josefsson <simon@josefsson.org> |  Tim R\u00fchsen <tim.ruehsen@gmx.de>",
+      "libidn2-2.3.8/COPYING:                     GNU GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies |  of this license document, but changing it is not allowed.",
+      "libidn2-2.3.8/COPYING.LESSERv3:                    GNU LESSER GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies |  of this license document, but changing it is not allowed.",
+      "libidn2-2.3.8/COPYING.unicode: A. Unicode Copyright. |  |     Copyright \u00a9 1991-2016 Unicode, Inc. All rights reserved. |     Certain documents and files on this website contain a legend indicating that \"Modification is permitted.\" Any person is hereby authorized, without fee, to modify such documents and files to create derivative works conforming to the Unicode\u00ae Standard, subject to Terms and Conditions herein. |     Any perso",
+      "libidn2-2.3.8/COPYINGv2:                     GNU GENERAL PUBLIC LICENSE |                        Version 2, June 1991 |  |  Copyright (C) 1989, 1991 Free Software Foundation, Inc., |  <https://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies"
+    ]
+  },
+  "mingw-w64-libplist": {
+    "pkgbase": "mingw-w64-libplist",
+    "pkgver": "2.7.0-4",
+    "declared_licenses": [
+      "spdx:GPL-2.0-or-later AND spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libplist-2.7.0-4.src.tar.zst",
+      "sha256": "0170254ac2a3e4fa0c88ec974a4e6d6a1e1b91d3da14d91b9b147a336c09a015"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libplist/libplist-2.7.0.tar.bz2",
+      "sha256": "7ac42301e896b1ebe3c654634780c82baa7cb70df8554e683ff89f7c2643eb8b"
+    },
+    "notices": [
+      {
+        "member": "libplist-2.7.0/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "9ee5828311bc47160791e9fc1574cb356d9d6a661b1d194a97cd254d58c9d3b9",
+        "size": 395
+      },
+      {
+        "member": "libplist-2.7.0/COPYING.LESSER",
+        "filename": "COPYING.LESSER",
+        "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+        "size": 26434
+      },
+      {
+        "member": "libplist-2.7.0/COPYING",
+        "filename": "COPYING",
+        "sha256": "7619c753cac95d4740220223bde48a032606fcaccde5e546f9bc444c81ab356d",
+        "size": 17988
+      },
+      {
+        "member": "libplist-2.7.0/libcnary/COPYING",
+        "filename": "libcnary-COPYING",
+        "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+        "size": 26434
+      }
+    ],
+    "audit_notes": [
+      "libplist-2.7.0/AUTHORS: Aaron Burghardt | Alexander Sack | Andrew Udvare | Bryan Forbes | Chow Loong Jin | Christophe Fergeau",
+      "libplist-2.7.0/COPYING.LESSER: \t\t  GNU LESSER GENERAL PUBLIC LICENSE | \t\t       Version 2.1, February 1999 |  |  Copyright (C) 1991, 1999 Free Software Foundation, Inc. |  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA |  Everyone is permitted to copy and distribute verbatim copies",
+      "libplist-2.7.0/COPYING: \t\t    GNU GENERAL PUBLIC LICENSE | \t\t       Version 2, June 1991 |  |  Copyright (C) 1989, 1991 Free Software Foundation, Inc., |  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA |  Everyone is permitted to copy and distribute verbatim copies",
+      "libplist-2.7.0/libcnary/COPYING: \t\t  GNU LESSER GENERAL PUBLIC LICENSE | \t\t       Version 2.1, February 1999 |  |  Copyright (C) 1991, 1999 Free Software Foundation, Inc. |  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA |  Everyone is permitted to copy and distribute verbatim copies"
+    ]
+  },
+  "mingw-w64-libssh": {
+    "pkgbase": "mingw-w64-libssh",
+    "pkgver": "0.12.2-1",
+    "declared_licenses": [
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libssh-0.12.2-1.src.tar.zst",
+      "sha256": "b935d915b5392e573f65855c491e476ae38860d3929d2b564e507aa660c3e05b"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libssh/libssh-0.12.2.tar.xz",
+      "sha256": "49560f677d96e3706a904ac2de1116e25f3680937d51e5c92198fcba4a1c1e9f"
+    },
+    "notices": [
+      {
+        "member": "libssh-0.12.2/COPYING",
+        "filename": "COPYING",
+        "sha256": "1656186e951db1c010a8485481fa94587f7e53a26d24976bef97945ad0c4df5a",
+        "size": 25008
+      },
+      {
+        "member": "libssh-0.12.2/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "95b6a58ab69d7687d9486b4a859ebfc00fff25b0942cc51239ada2702ae69d1b",
+        "size": 488
+      },
+      {
+        "member": "libssh-0.12.2/README",
+        "filename": "README",
+        "sha256": "c11c89adbbf1ee7b390b52affb30e1a246f8ea16c970c03793c80267a7141e1e",
+        "size": 1309
+      },
+      {
+        "member": "libssh-0.12.2/cmake/Modules/COPYING-CMAKE-SCRIPTS",
+        "filename": "COPYING-CMAKE-SCRIPTS",
+        "sha256": "46cde7dc11e64c78d650b4851b88f6704b4665ff60f22a1caf68ceb15e217e5b",
+        "size": 1327
+      }
+    ],
+    "audit_notes": [
+      "Official matching MSYS2 allsource archive fetched over HTTPS; original tar checksum equals PKGBUILD first sha256sum.",
+      "libssh COPYING contains LGPLv2.1; AUTHORS/README preserved. CMake scripts redistribution notice also retained."
+    ]
+  },
+  "mingw-w64-libtheora": {
+    "pkgbase": "mingw-w64-libtheora",
+    "pkgver": "1.2.0-1",
+    "declared_licenses": [
+      "spdx:BSD-3-Clause"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libtheora-1.2.0-1.src.tar.zst",
+      "sha256": "2390e994f10cb3e3e5f32898010ecede4e61bd10d47cfe4d1500ed8c7a774e85"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libtheora/libtheora-1.2.0.tar.gz",
+      "sha256": "279327339903b544c28a92aeada7d0dcfd0397b59c2f368cc698ac56f515906e"
+    },
+    "notices": [
+      {
+        "member": "libtheora-1.2.0/LICENSE",
+        "filename": "LICENSE",
+        "sha256": "2c902950c73a63cd285dc0c36573de9c5fefe66d49312949c51d941f33e92932",
+        "size": 960
+      },
+      {
+        "member": "libtheora-1.2.0/COPYING",
+        "filename": "COPYING",
+        "sha256": "8417fad7da775735564e209484a2e011e0fa201e94f01fdbee6e4977e478e6fc",
+        "size": 1470
+      },
+      {
+        "member": "libtheora-1.2.0/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "ef0ba8da05924cf4e2f9acf782076892ed477c01a6d4cc9f5d107652cf84da8c",
+        "size": 828
+      }
+    ],
+    "audit_notes": [
+      "libtheora-1.2.0/LICENSE: Please see the file COPYING for the copyright license for this software. |  | In addition to and irrespective of the copyright license associated | with this software, On2 Technologies, Inc. makes the following statement | regarding technology used in this software:",
+      "libtheora-1.2.0/COPYING: Copyright (C) 2002-2009 Xiph.org Foundation |  | Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions | are met:",
+      "libtheora-1.2.0/AUTHORS: Monty <monty@xiph.org> | \t- Original VP3 port |  | Timothy B. Terriberry | Gregory Maxwell"
+    ]
+  },
+  "mingw-w64-libvorbis": {
+    "pkgbase": "mingw-w64-libvorbis",
+    "pkgver": "1.3.7-3",
+    "declared_licenses": [
+      "custom"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libvorbis-1.3.7-3.src.tar.zst",
+      "sha256": "429f3219de93435cbaa7737627b3b548ba8917d09c525f2005b9283ac5b39142"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libvorbis/libvorbis-1.3.7.tar.gz",
+      "sha256": "0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab"
+    },
+    "notices": [
+      {
+        "member": "libvorbis-1.3.7/COPYING",
+        "filename": "COPYING",
+        "sha256": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+        "size": 1470
+      },
+      {
+        "member": "libvorbis-1.3.7/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "f5cab9f16035f770f50299f85cf2938c06dc3a9a30425961067788102ec896d3",
+        "size": 65
+      }
+    ],
+    "audit_notes": [
+      "libvorbis-1.3.7/COPYING: Copyright (c) 2002-2020 Xiph.org Foundation |  | Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions | are met:",
+      "libvorbis-1.3.7/AUTHORS: Monty <monty@xiph.org> |  | and the rest of the Xiph.org Foundation."
+    ]
+  },
+  "mingw-w64-libvpx": {
+    "pkgbase": "mingw-w64-libvpx",
+    "pkgver": "1.17.0-1",
+    "declared_licenses": [
+      "spdx:BSD-3-Clause"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-libvpx-1.17.0-1.src.tar.zst",
+      "sha256": "7b322fffe50501d26bbbb489135e5001f6096da2529ad992c712c00c94bb38dd"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-libvpx/libvpx-1.17.0.tar.gz",
+      "sha256": "1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a"
+    },
+    "notices": [
+      {
+        "member": "libvpx-1.17.0/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "8a98b560e5314713550e6d3ba2d8acf3ef54dfc870fc448bef08a7c57648a0bd",
+        "size": 9579
+      },
+      {
+        "member": "libvpx-1.17.0/LICENSE",
+        "filename": "LICENSE",
+        "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "size": 1537
+      },
+      {
+        "member": "libvpx-1.17.0/PATENTS",
+        "filename": "PATENTS",
+        "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "size": 1436
+      },
+      {
+        "member": "libvpx-1.17.0/third_party/googletest/src/LICENSE",
+        "filename": "third_party-googletest-src-LICENSE",
+        "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+        "size": 1475
+      },
+      {
+        "member": "libvpx-1.17.0/third_party/libwebm/AUTHORS.TXT",
+        "filename": "third_party-libwebm-AUTHORS.TXT",
+        "sha256": "3edb5f5496bfff3d6d4a62fa75fe996b814920d0d6e348c2e65c589e7ac5d177",
+        "size": 137
+      },
+      {
+        "member": "libvpx-1.17.0/third_party/libwebm/LICENSE.TXT",
+        "filename": "third_party-libwebm-LICENSE.TXT",
+        "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
+        "size": 1496
+      },
+      {
+        "member": "libvpx-1.17.0/third_party/libyuv/LICENSE",
+        "filename": "third_party-libyuv-LICENSE",
+        "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "size": 1506
+      },
+      {
+        "member": "libvpx-1.17.0/third_party/nalloc/LICENSE",
+        "filename": "third_party-nalloc-LICENSE",
+        "sha256": "d7dd0396ec46975e1bf9093680068ef301bc0ed204603e623a6f7073ab922ab1",
+        "size": 1069
+      },
+      {
+        "member": "libvpx-1.17.0/third_party/x86inc/LICENSE",
+        "filename": "third_party-x86inc-LICENSE",
+        "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "size": 936
+      }
+    ],
+    "audit_notes": [
+      "libvpx-1.17.0/AUTHORS: # This file is automatically generated from the git commit history | # by tools/gen_authors.sh. |  | Aaron Watry <awatry@gmail.com> | Abo Talib Mahfoodh <ab.mahfoodh@gmail.com>",
+      "libvpx-1.17.0/LICENSE: Copyright (c) 2010, The WebM Project authors. All rights reserved. |  | Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions are | met:",
+      "libvpx-1.17.0/PATENTS: Additional IP Rights Grant (Patents) | ------------------------------------ |  | \"These implementations\" means the copyrightable works that implement the WebM | codecs distributed by Google as part of the WebM Project.",
+      "libvpx-1.17.0/third_party/googletest/src/LICENSE: Copyright 2008, Google Inc. | All rights reserved. |  | Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions are",
+      "libvpx-1.17.0/third_party/libwebm/AUTHORS.TXT: # Names should be added to this file like so: | # Name or Organization <email address> |  | Google Inc. | Elijah Cirioli <eli.cirioli@gmail.com>",
+      "libvpx-1.17.0/third_party/libwebm/LICENSE.TXT: Copyright (c) 2010, Google Inc. All rights reserved. |  | Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions are | met:",
+      "libvpx-1.17.0/third_party/libyuv/LICENSE: Copyright 2011 The LibYuv Project Authors. All rights reserved. |  | Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions are | met:",
+      "libvpx-1.17.0/third_party/nalloc/LICENSE: MIT License |  | Copyright (c) 2023 Catena cyber |  | Permission is hereby granted, free of charge, to any person obtaining a copy",
+      "libvpx-1.17.0/third_party/x86inc/LICENSE: Copyright (C) 2005-2012 x264 project |  | Authors: Loren Merritt <lorenm@u.washington.edu> |          Anton Mitrofanov <BugMaster@narod.ru> |          Jason Garrett-Glaser <darkshikari@gmail.com>"
+    ]
+  },
+  "mingw-w64-nettle": {
+    "pkgbase": "mingw-w64-nettle",
+    "pkgver": "4.0-1",
+    "declared_licenses": [
+      "spdx:GPL-2.0-or-later",
+      "spdx:LGPL-3.0-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-nettle-4.0-1.src.tar.zst",
+      "sha256": "453187e86139bce3c5b94542cc709ead7f523f0fc33ce4cc2b8fe9d5a9719cdd"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-nettle/nettle-4.0.tar.gz",
+      "sha256": "3addbc00da01846b232fb3bc453538ea5468da43033f21bb345cb1e9073f5094"
+    },
+    "notices": [
+      {
+        "member": "nettle-4.0/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "6fd91e60caa0c33dd22888b710fcfa36532bbbef00d85c78de385dcd97f7b9ee",
+        "size": 4267
+      },
+      {
+        "member": "nettle-4.0/COPYING.LESSERv3",
+        "filename": "COPYING.LESSERv3",
+        "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+        "size": 7652
+      },
+      {
+        "member": "nettle-4.0/COPYINGv2",
+        "filename": "COPYINGv2",
+        "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+        "size": 18092
+      },
+      {
+        "member": "nettle-4.0/COPYINGv3",
+        "filename": "COPYINGv3",
+        "sha256": "e6037104443f9a7829b2aa7c5370d0789a7bda3ca65a0b904cdc0c2e285d9195",
+        "size": 35150
+      }
+    ],
+    "audit_notes": [
+      "nettle-4.0/AUTHORS: Authors of GNU Nettle |  | The oldest code in Nettle was copied into precursors of the Nettle | library from other public domain or LGPLv2 sources. |  | Steve Reid\t\tOriginal CAST128 implementation",
+      "nettle-4.0/COPYING.LESSERv3:                    GNU LESSER GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies |  of this license document, but changing it is not allowed.",
+      "nettle-4.0/COPYINGv2:                     GNU GENERAL PUBLIC LICENSE |                        Version 2, June 1991 |  |  Copyright (C) 1989, 1991 Free Software Foundation, Inc., |  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA |  Everyone is permitted to copy and distribute verbatim copies",
+      "nettle-4.0/COPYINGv3:                     GNU GENERAL PUBLIC LICENSE |                        Version 3, 29 June 2007 |  |  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/> |  Everyone is permitted to copy and distribute verbatim copies |  of this license document, but changing it is not allowed."
+    ]
+  },
+  "mingw-w64-opencore-amr": {
+    "pkgbase": "mingw-w64-opencore-amr",
+    "pkgver": "0.1.6-1",
+    "declared_licenses": [
+      "Apache"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-opencore-amr-0.1.6-1.src.tar.zst",
+      "sha256": "359bb4bcea1f8f49f875898887c25ab5c3c95af5b34afeca00fffd7256e5bccb"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-opencore-amr/opencore-amr-0.1.6.tar.gz",
+      "sha256": "483eb4061088e2b34b358e47540b5d495a96cd468e361050fae615b1809dc4a1"
+    },
+    "notices": [
+      {
+        "member": "opencore-amr-0.1.6/LICENSE",
+        "filename": "LICENSE",
+        "sha256": "8b3f1762349248d444ab9acbafe73941254e36e1064954da56bb9ddbd5873ddb",
+        "size": 10271
+      },
+      {
+        "member": "opencore-amr-0.1.6/opencore/NOTICE",
+        "filename": "opencore-NOTICE",
+        "sha256": "d106802b5e406073c1d10fbe9f638234c6973ebce37df71773179642085eb489",
+        "size": 12498
+      }
+    ],
+    "audit_notes": [
+      "opencore-amr-0.1.6/LICENSE: Apache License | Version 2.0, January 2004 | http://www.apache.org/licenses/ |  | TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION",
+      "opencore-amr-0.1.6/opencore/NOTICE: /* ------------------------------------------------------------------ |  * Copyright (C) 2009 PacketVideo |  * |  * Licensed under the Apache License, Version 2.0 (the \"License\"); |  * you may not use this file except in compliance with the License."
+    ]
+  },
+  "mingw-w64-p11-kit": {
+    "pkgbase": "mingw-w64-p11-kit",
+    "pkgver": "0.26.5-1",
+    "declared_licenses": [
+      "spdx:BSD-3-Clause"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-p11-kit-0.26.5-1.src.tar.zst",
+      "sha256": "1665c40c6237bbb9be868ecfc00ab65f9038047e4c608126de575ae4ecb5ca12"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-p11-kit/p11-kit-0.26.5.tar.xz",
+      "sha256": "f2cc09111e44bf3fea58f023180b33acea90aa82d042d6fbb623fbc5ba033bb7"
+    },
+    "notices": [
+      {
+        "member": "p11-kit-0.26.5/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "cde5ccbf5083e28d1b38333b5817be06c158fb3218f21ee5594b6125a9372591",
+        "size": 36
+      },
+      {
+        "member": "p11-kit-0.26.5/COPYING",
+        "filename": "COPYING",
+        "sha256": "2e1ba993904df807a10c3eda1e5c272338edc35674b679773a8b3ad460731054",
+        "size": 1447
+      }
+    ],
+    "audit_notes": [
+      "p11-kit-0.26.5/AUTHORS: Stef Walter <stefw@collabora.co.uk>",
+      "p11-kit-0.26.5/COPYING: Redistribution and use in source and binary forms, with or without | modification, are permitted provided that the following conditions | are met: |  |     * Redistributions of source code must retain the above |       copyright notice, this list of conditions and the"
+    ]
+  },
+  "mingw-w64-rtmpdump": {
+    "pkgbase": "mingw-w64-rtmpdump",
+    "pkgver": "2.6-2",
+    "declared_licenses": [
+      "spdx:GPL-2.0-or-later",
+      "spdx:LGPL-2.1-or-later"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-rtmpdump-2.6-2.src.tar.zst",
+      "sha256": "1f2b4eb1886b9934e60728cbe4b60fffa5a316b339e8ccae4b1eef9180d32cb5"
+    },
+    "git_archive": {
+      "prefix": "mingw-w64-rtmpdump/rtmpdump",
+      "commit": "138fdb258d9fc26f1843fd1b891180416c9dc575",
+      "ref": "refs/tags/v2.6"
+    },
+    "notices": [
+      {
+        "member": "COPYING",
+        "filename": "COPYING",
+        "sha256": "ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6",
+        "size": 17987
+      },
+      {
+        "member": "librtmp/COPYING",
+        "filename": "librtmp-COPYING",
+        "sha256": "03fe7ca91cc28e99b4003d5b3bd4ce3b084d4c475fdf9975cf0e7fdf4dc739cd",
+        "size": 26528
+      },
+      {
+        "member": "README",
+        "filename": "README",
+        "sha256": "c34184efa11f85d7b00670adf456b08078f2b1f588307551e6b4d641d7ff10aa",
+        "size": 8516
+      }
+    ],
+    "audit_notes": [
+      "Official matching MSYS2 allsource archive fetched over HTTPS. PKGBUILD pins git.ffmpeg.org/rtmpdump tag v2.6. Embedded source is a bare Git object database rather than a nested source tarball.",
+      "For audit, only packed-refs and objects/pack pack/index/rev bytes were copied to a fresh bare Git object directory; archived config/hooks were not used. No PKGBUILD/hooks executed. git rev-parse refs/tags/v2.6^{commit} resolved the pinned commit.",
+      "Top-level COPYING is GPLv2; librtmp/COPYING is LGPLv2.1. README identifies tool GPLv2, library LGPLv2.1 and upstream copyright holders. All retained verbatim."
+    ]
+  },
+  "mingw-w64-x264": {
+    "package": "mingw-w64-ucrt-x86_64-libx264",
+    "pkgbase": "mingw-w64-x264",
+    "pkgver": "0.165.r3222.b35605a-3",
+    "outer_archive": {
+      "filename": "mingw-w64-x264-0.165.r3222.b35605a-3.src.tar.zst",
+      "sha256": "6a4d3620201074edec84681aeb25ffa1eceaa9451f7347ca1448f532634eed55",
+      "url": "https://repo.msys2.org/mingw/sources/mingw-w64-x264-0.165.r3222.b35605a-3.src.tar.zst"
+    },
+    "git_archive": {
+      "prefix": "mingw-w64-x264/x264",
+      "commit": "b35605ace3ddf7c1a5d67a2eb553f034aef41d55"
+    },
+    "notices": [
+      {
+        "member": "COPYING",
+        "filename": "COPYING",
+        "sha256": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+        "size": 17992
+      },
+      {
+        "member": "AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "783150c1bef404fc7140924f3006eff27c940ea73ef38b3bc76fcb9c173229a5",
+        "size": 1999
+      },
+      {
+        "member": "x264.h",
+        "filename": "x264.h",
+        "sha256": "cec084bdb3cd2330800d0726bdbd99d91112df3fdb6d79f94e15ba67808b715c",
+        "size": 49056
+      },
+      {
+        "member": "common/x86/x86inc.asm",
+        "filename": "common-x86-x86inc.asm",
+        "sha256": "3beb1b973049966b4411037bbf3531c4da83611f4a9a68105f257a7fb0d122d6",
+        "size": 60460
+      },
+      {
+        "member": "extras/cl.h",
+        "filename": "extras-cl.h",
+        "sha256": "063a4c5502eb86665e884a46618d4a45abd4f49b4d40f77b85da50a9d3ad8683",
+        "size": 60845
+      },
+      {
+        "member": "extras/cl_platform.h",
+        "filename": "extras-cl_platform.h",
+        "sha256": "b69ff675e9b8275f790d0ef16ff6ab6f7812dd67425fd7e8ba69e00ca1a9421c",
+        "size": 41533
+      },
+      {
+        "member": "extras/inttypes.h",
+        "filename": "extras-inttypes.h",
+        "sha256": "0bfe445611373f97c25fbd4ccd0a8d826a47f0abce1ca18788ece9364c6a5bcb",
+        "size": 7561
+      },
+      {
+        "member": "extras/stdint.h",
+        "filename": "extras-stdint.h",
+        "sha256": "877bf396383165e0567dc3b3dd3524c1792b5069730599414540cbbdf981b25b",
+        "size": 6206
+      },
+      {
+        "member": "common/loongarch/loongson_asm.S",
+        "filename": "common-loongarch-loongson_asm.S",
+        "sha256": "8744303690f23cfc9e6ba99a188c0d60face47a5e8102c0d07302b2240cdbff3",
+        "size": 22216
+      }
+    ],
+    "audit": "Exact .SRCINFO/PKGBUILD names this full pinned git commit and custom declaration. COPYING is GPLv2; x264.h explicitly grants GPLv2-or-later with an alternative commercial license (commercial permission not assumed). AUTHORS retained. common/x86/x86inc.asm contains separate ISC permission/copyright that requires retention; Khronos OpenCL headers contain permissive MIT-style notices; MSVC inttypes header includes three BSD-style conditions, retained conservatively even though target compiler is MinGW; stdint is public domain with disclaimer. LoongArch assembly ISC notice retained conservatively for complete source distribution. No archive PKGBUILD/config/hooks executed. Object pack and idx individually copied into clean local bare git, git cat-file blob reads only exact commit:path. No network from git.",
+    "declared_licenses": [
+      "custom"
+    ]
+  },
+  "mingw-w64-x265": {
+    "package": "mingw-w64-ucrt-x86_64-x265",
+    "pkgbase": "mingw-w64-x265",
+    "inner_archive": {
+      "member": "mingw-w64-x265/x265-4.3.tar.gz",
+      "sha256": "83c53e4c8bbb8f1e33ed59e10a7d621d1d7801ca853910c3eb41f038b8ffb121"
+    },
+    "notices": [
+      {
+        "member": "x265_4.3/COPYING",
+        "filename": "COPYING",
+        "sha256": "d8afb1bcc7a2cfc603683b168d6987ef0a48e59e0da3693bf55c5d33b67e2b49",
+        "size": 18120
+      },
+      {
+        "member": "x265_4.3/readme.rst",
+        "filename": "readme.rst",
+        "sha256": "6ba38aacaaf425d34ad76f46048aad5322f28f075b9f83631b490f1e5a5e9bff",
+        "size": 800
+      },
+      {
+        "member": "x265_4.3/source/dynamicHDR10/LICENSE.txt",
+        "filename": "LICENSE.dynamicHDR10.txt",
+        "sha256": "47f15d63e82eb8a4de6e46471d5f96cf6d052fd5355944a002c3157880248b69",
+        "size": 849
+      },
+      {
+        "member": "x265_4.3/source/dynamicHDR10/json11/LICENSE.txt",
+        "filename": "LICENSE.json11.txt",
+        "sha256": "950e288a2548cb33f6a90d23958806b0803f510ab17c600d661619a73ae3a6c8",
+        "size": 1057
+      },
+      {
+        "member": "x265_4.3/source/common/x86/x86inc.asm",
+        "filename": "x86inc.asm",
+        "sha256": "703ecb62720e38dd7b0731d54848d97369d7f06dd1e058840740bab49a915fb4",
+        "size": 49910
+      }
+    ],
+    "audit": "COPYING is GNU GPL version 2. readme.rst confirms GPL distribution; commercial licensing is an alternative not used here. The package enables HDR10_PLUS and assembly. Therefore preserve the distinct MulticoreWare dynamicHDR10 GPLv2-or-later notice, Dropbox json11 MIT copyright/permission/disclaimer, and the full x86inc.asm member containing the ISC copyright/permission/disclaimer (x264 project and MulticoreWare). The other permissive-header members found were a CMake build script, json11 source repeating the same MIT notice, and LoongArch-only assembly unused by the x86_64 UCRT build. Full matching source preserves all original source headers.",
+    "pkgver": "4.3-1",
+    "outer_archive": {
+      "filename": "mingw-w64-x265-4.3-1.src.tar.zst",
+      "sha256": "f2f94e2dd88cd9ce917bd68eb6cb3f41e15d63d56efbfa386416800efa3eae10",
+      "url": "https://repo.msys2.org/mingw/sources/mingw-w64-x265-4.3-1.src.tar.zst"
+    },
+    "declared_licenses": [
+      "GPL"
+    ]
+  },
+  "mingw-w64-xvidcore": {
+    "package": "mingw-w64-ucrt-x86_64-xvidcore",
+    "pkgbase": "mingw-w64-xvidcore",
+    "inner_archive": {
+      "member": "mingw-w64-xvidcore/xvidcore-1.3.7.tar.bz2",
+      "sha256": "aeeaae952d4db395249839a3bd03841d6844843f5a4f84c271ff88f7aa1acff7"
+    },
+    "notices": [
+      {
+        "member": "xvidcore/LICENSE",
+        "filename": "LICENSE",
+        "sha256": "2ab06d2335f9781f1a485c78a557e6c61b6c24e118caad4d4210c46426bbce95",
+        "size": 17987
+      },
+      {
+        "member": "xvidcore/README",
+        "filename": "README",
+        "sha256": "8b5f7edbabff380fa1b152ab0d0485534d06b2c148857592a621b9459e95abbd",
+        "size": 840
+      },
+      {
+        "member": "xvidcore/AUTHORS",
+        "filename": "AUTHORS",
+        "sha256": "c6fc2bbc06918472097224a9d7096cf47d8337643afd3b9b9b281cb17711b29e",
+        "size": 1233
+      }
+    ],
+    "audit": "LICENSE is GNU GPL version 2. README explicitly applies that license to Xvid as a whole except differently marked file headers. AUTHORS preserves upstream contributor attribution. src/xvid.c grants GPL version 2 or later and names Peter Ross and Michael Militzer. A scan for permissive redistribution/permission clauses found only build/generic/install-sh, a build tool not compiled into xvidcore.dll; full matching source retains its original notice as well. vfw/LICENSE is for the separate VfW frontend, not this library.",
+    "pkgver": "1.3.7-5",
+    "outer_archive": {
+      "filename": "mingw-w64-xvidcore-1.3.7-5.src.tar.zst",
+      "sha256": "400fb6859dcfbfa3f416098a3ff0cde2ca89daaae587b59dc34d150175d4841a",
+      "url": "https://repo.msys2.org/mingw/sources/mingw-w64-xvidcore-1.3.7-5.src.tar.zst"
+    },
+    "declared_licenses": [
+      "GPL"
+    ]
+  },
+  "mingw-w64-zimg": {
+    "pkgbase": "mingw-w64-zimg",
+    "pkgver": "3.0.6-3",
+    "declared_licenses": [
+      "spdx:WTFPL"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-zimg-3.0.6-3.src.tar.zst",
+      "sha256": "0e6026b3899ff49d109b89cbd51b9768b475f7c1b29c7655517da9c1a564a41e"
+    },
+    "inner_archive": {
+      "member": "mingw-w64-zimg/zimg-3.0.6.tar.gz",
+      "sha256": "be89390f13a5c9b2388ce0f44a5e89364a20c1c57ce46d382b1fcc3967057577"
+    },
+    "notices": [
+      {
+        "member": "zimg-release-3.0.6/COPYING",
+        "filename": "COPYING",
+        "sha256": "7637386b5f81e8a719ca336233149005e5fa28b5e6054ea7b67de49355b0ad40",
+        "size": 484
+      }
+    ],
+    "audit_notes": [
+      "zimg-release-3.0.6/COPYING:             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE |                     Version 2, December 2004 |  |  Copyright (C) 2004 Sam Hocevar <sam@hocevar.net> | "
+    ]
+  }
+}

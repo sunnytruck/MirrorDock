@@ -56,6 +56,8 @@ Run #4で判明した別の失敗は、`setup-msys2`がセットアップ終了�
 
 公式FFmpeg 9.0.2-1バイナリパッケージには`share/licenses`の本文がないことを実物で確認しました。対応ソースの`ffmpeg-9.0.2.tar.xz`には`LICENSE.md`とGPL/LGPL本文4件が存在するため、このパッケージと`spdx:GPL-3.0-or-later`の組み合わせに限り、その5文書を原文のまま収集します。`source-provenance.json`に取得元・各SHA-256を記録します。未確認のパッケージにこの例外を適用せず、本文不足・曖昧な配置・リンクは失敗にします。
 
+その後の実DLL依存の調査と[Run #6](https://github.com/sunnytruck/MirrorDock/actions/runs/39748251563)で、GMPやGStreamer等にも本文の不足が確認されました。[監査済み定義](../scripts/engine/audited-source-notices.json)に、実物で確認したpackage/version/license・対応ソースSHA-256・原本tarのSHA-256またはGitコミット・必要な本文のSHA-256を記録します。この定義に完全一致する場合だけ対応ソースから原文を取り出します。VCSソースはGitオブジェクトだけを一時領域へ読み込み、設定・フック・PKGBUILDを実行しません。本文不足や未確認版は配布を停止します。
+
 ## 所有者検索の改行境界（Run #3の修正）
 
 Run #3はUxPlayのリンク・DLL収集まで成功し、`pacman -Qqo`が`avcodec-63.dll`を見つけられず停止しました。元コードはUCRT64版Pythonの`print()`をリダイレクトして一覧を作り、Bashの`read -r`で読み取っていました。Windowsの標準テキスト出力がCRLFを生成するため、Bashの検索引数には末尾CRが残ります。

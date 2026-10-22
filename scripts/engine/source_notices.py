@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recover audited FFmpeg notices from the exact corresponding-source archive.
+"""Recover audited notices from the exact corresponding-source archive.
 
 This is deliberately not a generic permission to publish packages without
 notices. No PKGBUILD is executed and no archive tree is extracted to disk.
@@ -18,6 +18,7 @@ import tempfile
 NOTICES = ('LICENSE.md', 'COPYING.GPLv2', 'COPYING.GPLv3', 'COPYING.LGPLv2.1', 'COPYING.LGPLv3')
 MAX_NOTICE = 1_000_000
 MAX_INNER = 64_000_000
+PROFILES_PATH = Path(__file__).with_name('audited-source-notices.json')
 
 
 def _sha256_file(path: Path) -> str:
@@ -47,10 +48,18 @@ def _listing(archive: Path, member: str | None = None) -> list[str]:
     return result.stdout.splitlines()
 
 
-def collect_notices(pkgbase: str, pkgver: str, source_archive: Path,
-                    destination: Path, declared_license: str) -> int:
+def _profile(pkgbase: str, pkgver: str, source_archive: Path, declared_license: str) -> dict:
     declarations = [item for item in declared_license.split(';') if item]
-    if pkgbase != 'mingw-w64-ffmpeg' or declarations != ['spdx:GPL-3.0-or-later']:
+    if pkgbase != 'mingw-w64-ffmpeg':
+        profiles = json.loads(PROFILES_PATH.read_text(encoding='utf-8'))
+        profile = profiles.get(pkgbase)
+        if (profile is None or profile['pkgbase'] != pkgbase or profile['pkgver'] != pkgver or
+                sorted(profile['declared_licenses']) != sorted(declarations)):
+            raise RuntimeError('No audited source-notice fallback for this package/version/license')
+        if _sha256_file(source_archive) != profile['outer_archive']['sha256']:
+            raise RuntimeError('Corresponding source differs from the audited archive')
+        return profile
+    if declarations != ['spdx:GPL-3.0-or-later']:
         raise RuntimeError('No audited source-notice fallback for this package/license')
     version = pkgver
     if '~' in version:
@@ -61,63 +70,99 @@ def collect_notices(pkgbase: str, pkgver: str, source_archive: Path,
     if match is None:
         raise RuntimeError('Unsupported FFmpeg package version')
     upstream = match.group(1)
-    source_archive = Path(source_archive)
-    destination = Path(destination)
-    if not source_archive.is_file() or source_archive.is_symlink():
-        raise RuntimeError('Corresponding-source archive is not a regular file')
+    return {'inner_archive': {'basename': f'ffmpeg-{upstream}.tar.xz'},
+            'notices': [{'member': f'ffmpeg-{upstream}/{filename}', 'filename': filename} for filename in NOTICES]}
+
+
+def _tar_notices(source_archive: Path, profile: dict) -> tuple[dict[str, bytes], dict]:
     names = _listing(source_archive)
     for name in names:
         _safe_member(name)
-    expected = f'ffmpeg-{upstream}.tar.xz'
-    originals = [name for name in names if PurePosixPath(name).name == expected]
+    expected = profile['inner_archive']
+    originals = [name for name in names if
+                 (name == expected['member'] if 'member' in expected else PurePosixPath(name).name == expected['basename'])]
     if len(originals) != 1:
-        raise RuntimeError('Expected one exact original FFmpeg source archive')
+        raise RuntimeError('Expected one exact original source archive')
     original = originals[0]
     detail = _listing(source_archive, original)
     if len(detail) != 1 or not detail[0].startswith('-'):
-        raise RuntimeError('Original FFmpeg source member is not a regular file')
+        raise RuntimeError('Original source member is not a regular file')
 
     payloads: dict[str, bytes] = {}
-    notice_records = []
     with tempfile.TemporaryFile() as inner:
         subprocess.run(['bsdtar', '-xOf', str(source_archive), '--', original], check=True,
                        stdout=inner, stderr=subprocess.PIPE, timeout=60)
         if inner.tell() > MAX_INNER:
-            raise RuntimeError('Original FFmpeg source archive is too large')
+            raise RuntimeError('Original source archive is too large')
         inner.seek(0)
         inner_digest = hashlib.sha256()
         for block in iter(lambda: inner.read(1024 * 1024), b''):
             inner_digest.update(block)
+        if 'sha256' in expected and inner_digest.hexdigest() != expected['sha256']:
+            raise RuntimeError('Original source differs from the audited archive')
         inner.seek(0)
-        with tarfile.open(fileobj=inner, mode='r:xz') as archive:
+        with tarfile.open(fileobj=inner, mode='r:*') as archive:
             members = {}
             for member in archive.getmembers():
                 _safe_member(member.name)
                 if member.name in members:
-                    raise RuntimeError('Ambiguous FFmpeg source member')
+                    raise RuntimeError('Ambiguous original source member')
                 members[member.name] = member
-            for filename in NOTICES:
-                member_name = f'ffmpeg-{upstream}/{filename}'
+            for notice in profile['notices']:
+                filename, member_name = notice['filename'], notice['member']
                 member = members.get(member_name)
                 if member is None or not member.isfile() or not 0 < member.size <= MAX_NOTICE:
-                    raise RuntimeError(f'Missing or invalid required FFmpeg notice: {filename}')
+                    raise RuntimeError(f'Missing or invalid required notice: {filename}')
                 stream = archive.extractfile(member)
                 if stream is None:
-                    raise RuntimeError(f'Cannot read required FFmpeg notice: {filename}')
+                    raise RuntimeError(f'Cannot read required notice: {filename}')
                 with stream:
                     payload = stream.read(MAX_NOTICE + 1)
                 if len(payload) != member.size or len(payload) > MAX_NOTICE:
-                    raise RuntimeError(f'Invalid FFmpeg notice size: {filename}')
+                    raise RuntimeError(f'Invalid notice size: {filename}')
                 payloads[filename] = payload
-                notice_records.append({'member': member_name, 'filename': filename,
-                                       'sha256': hashlib.sha256(payload).hexdigest(), 'size': len(payload)})
+    return payloads, {'inner_archive': {'member': original, 'sha256': inner_digest.hexdigest()}}
+
+
+def collect_notices(pkgbase: str, pkgver: str, source_archive: Path,
+                    destination: Path, declared_license: str) -> int:
+    source_archive, destination = Path(source_archive), Path(destination)
+    # Reject unsupported packages before invoking archive readers.
+    profile = _profile(pkgbase, pkgver, source_archive, declared_license)
+    if not source_archive.is_file() or source_archive.is_symlink():
+        raise RuntimeError('Corresponding-source archive is not a regular file')
+    output_names = set()
+    for notice in profile['notices']:
+        filename = notice['filename']
+        _safe_member(filename)
+        if '/' in filename or filename.casefold() in output_names or filename == 'source-provenance.json':
+            raise RuntimeError('Invalid or colliding audited notice filename')
+        output_names.add(filename.casefold())
+    if not output_names:
+        raise RuntimeError('Audited notice list must not be empty')
+    if 'git_archive' in profile:
+        from git_source_notices import read_git_notices
+        payloads = read_git_notices(source_archive, profile)
+        source_record = {'git_archive': profile['git_archive']}
+    else:
+        payloads, source_record = _tar_notices(source_archive, profile)
+    if set(payloads) != {notice['filename'] for notice in profile['notices']}:
+        raise RuntimeError('Incomplete audited notices')
+    notice_records = []
+    for notice in profile['notices']:
+        payload = payloads[notice['filename']]
+        digest = hashlib.sha256(payload).hexdigest()
+        if not 0 < len(payload) <= MAX_NOTICE or ('size' in notice and len(payload) != notice['size']) or ('sha256' in notice and digest != notice['sha256']):
+            raise RuntimeError('Notice differs from the audited original')
+        notice_records.append({'member': notice['member'], 'filename': notice['filename'],
+                               'sha256': digest, 'size': len(payload)})
 
     provenance = {
         'pkgbase': pkgbase, 'pkgver': pkgver, 'declared_license': declared_license,
         'outer_archive': {'filename': source_archive.name, 'sha256': _sha256_file(source_archive)},
-        'inner_archive': {'member': original, 'sha256': inner_digest.hexdigest()},
+        **source_record,
         'notices': notice_records,
-        'method': 'Exact FFmpeg source notices; no PKGBUILD execution or arbitrary tree extraction',
+        'method': 'Audited original source notices; no PKGBUILD execution or arbitrary tree extraction',
     }
     payloads['source-provenance.json'] = (json.dumps(provenance, ensure_ascii=True, indent=2) + '\n').encode('utf-8')
     if destination.is_symlink():
@@ -133,7 +178,7 @@ def collect_notices(pkgbase: str, pkgver: str, source_archive: Path,
         if not target.exists():
             with target.open('xb') as out:
                 out.write(payload)
-    return len(NOTICES)
+    return len(notice_records)
 
 
 if __name__ == '__main__':
