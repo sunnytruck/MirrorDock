@@ -8,7 +8,7 @@
 
 公式は Windows 10/11 x64 で MSYS2 MinGW ビルドに対応し、UCRT64 を推奨しています。
 1.74 は実験版です。1.74 以降の既定 mDNS 実装は Bonjour 不要です。旧版および `USE_DNS_SD=1` での構築では Apple Bonjour SDK / Bonjour サービスが必要です。
-本プロジェクトで Windows 上の構築・受信までは検証していません。公式のサポート記述と、このプロジェクトでの実機確認は区別してください。
+Windows CIでの構築・配布検証と、開発環境での実機計測、利用者からの受信成功報告は区別してください。
 
 使用する確認済みオプション：`-n <name>`、`-nh`、`-d 1`、`-as autoaudiosink` / `-as 0`、Windows の `-vs d3d11videosink`。
 `-nh` はホスト名の付加を抑制します。`-d 1` は状態検出に必要なデバッグログを有効化しパケットデータ出力を抑制します。
@@ -17,7 +17,7 @@
 
 ## 一般ユーザー向け：コマンド操作なしの導入
 
-**Windows・iPhoneでの受信は未検証です。実験版であり、動作を保証しません。** 初版のJavaアプリのWindows CI成功と、今回追加したエンジン配布CIの成功は別です。
+**利用者からWindows実機で映像・音声を受信できた報告がありますが、開発環境での実機計測は未実施です。実験版であり、動作を保証しません。** CIのビルド・配布検証と、実機の受信・性能検証は別です。
 
 1. [ActionsのWindows package](https://github.com/sunnytruck/MirrorDock/actions/workflows/windows.yml) で、今回の変更を含む成功した実行を開きます。Artifactsの`MirrorDock-Windows`をダウンロード・展開し、EXEをインストールします。Javaは同梱されています。
 2. [成功したRun #8のエンジンArtifacts](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066/artifacts/12414019562) をダウンロード・展開します。後続版は[Actionsのエンジン配布](https://github.com/sunnytruck/MirrorDock/actions/workflows/engine.yml)で成功した実行から取得してください。ソースコード用ZIPや上流のSource code ZIPではありません。
@@ -83,6 +83,8 @@ JDK 21 x64 を導入し、`JAVA_HOME` をそのディレクトリに設定しま
 UxPlay とその依存 DLL はインストーラーに含めません。
 
 ## 接続できない場合
+
+接続でき、映像だけがときどき引っかかる場合は[性能調査・計測手順](docs/PERFORMANCE_DIAGNOSTICS.md)を参照してください。設定を決め打ちで変えず、同じ条件でFPS・QoS・デコード・描画・通信を切り分けます。現行の「受信エンジンを診断」と「状態ログ」は、稼働中の性能計測には対応していません。
 
 - **実行ファイル未設定 / 不存在**：「エンジンZIPを導入」または設定から信頼できる `uxplay.exe` を選択。相対パスや `.cmd` / `.bat` は受け付けません。
 - **起動直後に終了 / DLL 不足**：「受信エンジンを診断」で確認します。`0xC0000135`/Win32 126はDLL不足、`0xC000007B`/193は形式不一致、`0xC0000142`/1114は初期化失敗として案内します。ZIPを再取得して一式を再導入してください。手動MSYS2版は同一UCRT64環境を修復します。DLL単体サイトから追加しないでください。
