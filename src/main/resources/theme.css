@@ -1,0 +1,8 @@
+.root { -fx-font-family: "Segoe UI", "Noto Sans CJK JP", sans-serif; -fx-font-size: 15px; -fx-base: #202632; -fx-background: #131923; -fx-control-inner-background: #202a38; -fx-text-fill: #ecf1fa; -fx-accent: #70bcff; }
+.label { -fx-text-fill: #e1e9f5; }
+.title { -fx-font-size: 32px; -fx-font-weight: bold; }
+.button { -fx-padding: 10 20; -fx-background-radius: 7; -fx-cursor: hand; }
+.button:default { -fx-background-color: #3986d4; }
+.text-field { -fx-padding: 10; }
+.titled-pane > .content { -fx-padding: 12; }
+.scroll-pane > .viewport { -fx-background-color: #131923; }

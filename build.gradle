@@ -1,0 +1,51 @@
+plugins { id 'application' }
+repositories { mavenCentral() }
+def javafxPlatform = System.getProperty('os.name').toLowerCase().contains('win') ? 'win' : 'linux'
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+dependencies {
+    implementation("org.openjfx:javafx-base:21.0.7:${javafxPlatform}") { transitive = false }
+    implementation("org.openjfx:javafx-graphics:21.0.7:${javafxPlatform}") { transitive = false }
+    implementation("org.openjfx:javafx-controls:21.0.7:${javafxPlatform}") { transitive = false }
+    implementation 'net.java.dev.jna:jna-platform:5.17.0'
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+application { mainClass = 'jp.mirrordock.Launcher' }
+test { useJUnitPlatform(); systemProperty 'user.home', layout.buildDirectory.dir('test-home').get().asFile.absolutePath }
+tasks.register('packageWindows', Exec) {
+    dependsOn installDist
+    doFirst {
+        if (!System.getProperty('os.name').toLowerCase().contains('win')) throw new GradleException('Windows x64 JDK 21 + WiX 3.x が必要です。')
+    }
+    commandLine "${System.getProperty('java.home')}/bin/jpackage.exe", '--type', 'exe',
+        '--name', 'MirrorDock', '--app-version', '1.0.0', '--vendor', 'MirrorDock',
+        '--input', layout.buildDirectory.dir('install/MirrorDock/lib').get().asFile,
+        '--main-jar', 'MirrorDock.jar', '--main-class', application.mainClass.get(),
+        '--dest', layout.buildDirectory.dir('installer').get().asFile,
+        '--win-menu', '--win-shortcut', '--win-dir-chooser', '--win-per-user-install',
+        '--java-options', '-Dfile.encoding=UTF-8',
+        '--java-options', '--module-path=$APPDIR', '--java-options', '--add-modules=javafx.controls'
+}
+distributions {
+    main {
+        contents {
+            from('README.md', 'INSTALL.md')
+            into('lib/licenses') {
+                from('THIRD_PARTY_LICENSES.md')
+                from('licenses')
+            }
+        }
+    }
+}
+
+// Keep JavaFX on the module path while application/JNA remain on the classpath.
+run {
+    doFirst { jvmArgs '--module-path', configurations.runtimeClasspath.asPath, '--add-modules', 'javafx.controls' }
+}
+startScripts {
+    doLast {
+        unixScript.text = unixScript.text.replace('-classpath "$CLASSPATH"', '--module-path "$APP_HOME/lib" --add-modules javafx.controls -classpath "$CLASSPATH"')
+        windowsScript.text = windowsScript.text.replace('-classpath "%CLASSPATH%"', '--module-path "%APP_HOME%\\lib" --add-modules javafx.controls -classpath "%CLASSPATH%"')
+    }
+}
