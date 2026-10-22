@@ -57,7 +57,7 @@ Windows 11 x64 向けの日本語 JavaFX AirPlay 受信ランチャーです。i
 `packageWindows` は **Windows x64 上の JDK 21 + WiX 3.x（candle.exe / light.exe が PATH にあること）** が必要です。
 `build/installer/` に EXE インストーラーを生成し、jpackage が Java ランタイムを同梱します。UxPlay / Bonjour / MSYS2 / GStreamer DLL は同梱しません。
 `build/distributions/` の ZIP は JDK/JRE 21 の別途導入が必要です。Linux で生成した ZIP に Windows 用 JavaFX は入りません。Windows 配布物は Windows 上で再ビルドしてください。
-`.github/workflows/windows.yml` の初版はWindows CI成功を利用者の画面で確認しました。今回の改訂後のCI結果は別途確認が必要です。
+通常版のWindowsビルド・インストーラー生成は [Windows CI（0320c7c）](https://github.com/sunnytruck/MirrorDock/actions/runs/39750391418) で成功を確認しました。
 `.github/workflows/engine.yml` はUxPlayの固定SHAをWindowsでビルドし、DLL・プラグインと対応ソースを同じArtifactsにまとめます。CI内でバイナリパッケージの署名確認・対応ソース取得・DLL依存解決・プラグイン検査が失敗した場合は成果物を配布しません。初回のエンジンCI・実機受信は未確認です。
 同梱の実現可能性とライセンス義務は [docs/ENGINE_DISTRIBUTION.md](docs/ENGINE_DISTRIBUTION.md) を参照してください。
 
@@ -66,13 +66,13 @@ Windows 11 x64 向けの日本語 JavaFX AirPlay 受信ランチャーです。i
 クラウド Linux x64 で `build`、単体テスト36件（失敗0・スキップ0）、`installDist` を実行しました。
 仮想画面で GUI 起動と UxPlay 未設定時のエラー表示を検証しました。テストのプロセス起動・停止には模擬エンジンを使用しています。実際の UxPlay 受信成功を示すものではありません。
 
-配布処理のPythonテストはLinuxで51件成功し、Windows専用のパス検証1件は未実行です。Windowsでの全件結果はCIで別途確認が必要です。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。Bash・Git・bsdtar（Linuxではlibarchive-tools）が必要です。エンジンCIではMSYS2がこれらを導入します。
+配布処理のPythonテストはLinuxで51件成功、Windows専用のパス検証1件をスキップしました。[Windows CI Run #7](https://github.com/sunnytruck/MirrorDock/actions/runs/39750391414)では52件すべて成功・スキップなしです（同Runのソース・通知収集は失敗し、エンジン配布は未完了）。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。Bash・Git・bsdtar（Linuxではlibarchive-tools）が必要です。エンジンCIではMSYS2がこれらを導入します。
 
 テスト対象：従来の設定・プロセス・画面位置補正に加え、ZIPの導入/破損/危険なパス/重複/形式、DLLエラー分類、診断タイムアウト時の停止、ファイアウォール結果の慎重な解釈、ポータブル環境設定。診断プロセスも模擬エンジンを使い、Windows固有の実行自体は未確認です。
 
 **Windows PC と iPhone はこのクラウドにないため、次は未確認です。リリース前に必ず実施してください。**
 
-- [ ] 改訂版のWindows CI、エンジンCI、GUI起動、インストール・アンインストール（初版のアプリCI成功は確認済み）。
+- [ ] エンジンCIの配布完了、WindowsでのGUI起動、インストール・アンインストール（通常版のWindows CI成功は確認済み）。
 - [ ] CIエンジンZIPの取得・GUI導入・DLL/プラグインの検査、Windows診断の実行。
 - [ ] 実際の UxPlay 起動、DLL / GStreamer / mDNS の準備とサービス広告。
 - [ ] iPhone の一覧に MirrorDock が表示され、映像と音声が出ること。

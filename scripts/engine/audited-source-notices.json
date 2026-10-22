@@ -124,6 +124,48 @@
       "GnuTLS README.md Licensing section states main libraries LGPLv2.1-or-later and other programs GPLv3-or-later, and warns about nettle/gmp downstream licensing. COPYING (GPLv3), COPYING.LESSERv2 (LGPLv2.1), AUTHORS and README are preserved. Included CRYPTOGAMS, inih BSD, crau MIT/Unlicense notices to retain bundled subcomponent notices. Documentation-only FDL chapter is not copied."
     ]
   },
+  "mingw-w64-gsfonts": {
+    "pkgbase": "mingw-w64-gsfonts",
+    "pkgver": "20200910-3",
+    "declared_licenses": [
+      "AGPL3"
+    ],
+    "outer_archive": {
+      "filename": "mingw-w64-gsfonts-20200910-3.src.tar.zst",
+      "sha256": "919e9888283afaf48ac690bf0822bbb7b05a377e76131aa08a73da6a26d1c729"
+    },
+    "git_archive": {
+      "prefix": "mingw-w64-gsfonts/urw-base35-fonts",
+      "commit": "c15105598aa7eb256b1ebfcecd3d078801521e73"
+    },
+    "notices": [
+      {
+        "member": "COPYING",
+        "filename": "COPYING",
+        "sha256": "57c8ff33c9c0cfc3ef00e650a1cc910d7ee479a8bc509f6c9209a7c2a11399d6",
+        "size": 34520
+      },
+      {
+        "member": "LICENSE",
+        "filename": "LICENSE",
+        "sha256": "772b1b47eead8722156abaed483154e1dd1137e7035290550cea6444192a2e3f",
+        "size": 440
+      },
+      {
+        "member": "README.md",
+        "filename": "README.md",
+        "sha256": "6d51b6dc08c39d78a82664c386f4b794333df5b71865648927e05cbfd480e72d",
+        "size": 657
+      },
+      {
+        "member": "fontconfig/README.md",
+        "filename": "fontconfig-README.md",
+        "sha256": "2da3ee90d0fafcaa0a9967cc8c532fc6234a6ce5c46fe3f1433823a2c91b0e5d",
+        "size": 1685
+      }
+    ],
+    "audit_notes": "Official MSYS2 matching source .SRCINFO agrees with pkgbase mingw-w64-gsfonts, pkgver 20200910, pkgrel 3, AGPL3 and git source tag 20200910. Tag peels to pinned commit c15105598aa7eb256b1ebfcecd3d078801521e73. Official binary archive SHA256 matches repository database, owns 13 regular etc/fonts/conf.avail files and matching conf.d symlinks, and has no share/licenses files. All 13 regular config files exactly match this commit after package recipe 69- filename prefix. Root LICENSE covers fonts and related files under GNU AGPLv3; COPYING is the full AGPLv3. The special exception only permits inclusion of font programs in PostScript/PDF documents; it does not broadly exempt redistribution or change config-file licensing. Root README and fontconfig README preserve scope/context. fonts/LICENSE and fonts/COPYING are byte-identical to root LICENSE/COPYING, so duplicate notice bytes are not repeated. No package scripts or Git hooks executed."
+  },
   "mingw-w64-gst-libav": {
     "pkgbase": "mingw-w64-gst-libav",
     "pkgver": "1.28.8-1",

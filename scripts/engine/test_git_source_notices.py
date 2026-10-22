@@ -48,6 +48,11 @@ class GitSourceNoticesTests(unittest.TestCase):
             self.git('repack', '-ad')
         archive = self.root / 'sources.tar.gz'
         with tarfile.open(archive, 'w:gz') as stream:
+            # Older official allsource bare repositories keep this empty
+            # metadata directory. Its contents remain forbidden.
+            branches = tarfile.TarInfo(self.prefix + '/branches/')
+            branches.type = tarfile.DIRTYPE
+            stream.addfile(branches)
             for raw in sorted((self.repo / 'objects').rglob('*')):
                 # Native MinGW Python rglob can return unparsed Windows
                 # DirEntry paths under MSYSTEM; reparse before relative_to.
@@ -109,6 +114,7 @@ class GitSourceNoticesTests(unittest.TestCase):
 
     def test_unsafe_duplicate_unknown_and_linked_archive_members_rejected(self):
         cases = [self.entry('../escape'), self.entry(self.prefix + '/objects/info/alternates'),
+                 self.entry(self.prefix + '/branches/unreviewed'),
                  self.entry(self.prefix + '/objects/ab/invalid'),
                  self.entry(self.prefix + '/unknown-metadata'),
                  self.entry(self.prefix + '/config'),

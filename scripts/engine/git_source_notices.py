@@ -74,7 +74,7 @@ def _entries(archive: Path, env: dict[str, str], cwd: Path) -> list[tuple[str, s
 
 def _ignored_metadata(relative: str, kind: str) -> bool:
     if kind == 'd':
-        return (relative in ('', 'hooks', 'info', 'objects', 'objects/info', 'objects/pack',
+        return (relative in ('', 'branches', 'hooks', 'info', 'objects', 'objects/info', 'objects/pack',
                              'refs', 'refs/heads', 'refs/tags', 'refs/remotes') or
                 re.fullmatch(r'objects/[0-9a-f]{2}', relative) is not None or
                 relative.startswith(('refs/heads/', 'refs/tags/', 'refs/remotes/')))

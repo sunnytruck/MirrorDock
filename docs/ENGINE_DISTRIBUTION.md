@@ -58,6 +58,8 @@ Run #4で判明した別の失敗は、`setup-msys2`がセットアップ終了�
 
 その後の実DLL依存の調査と[Run #6](https://github.com/sunnytruck/MirrorDock/actions/runs/39748251563)で、GMPやGStreamer等にも本文の不足が確認されました。[監査済み定義](../scripts/engine/audited-source-notices.json)に、実物で確認したpackage/version/license・対応ソースSHA-256・原本tarのSHA-256またはGitコミット・必要な本文のSHA-256を記録します。この定義に完全一致する場合だけ対応ソースから原文を取り出します。VCSソースはGitオブジェクトだけを一時領域へ読み込み、設定・フック・PKGBUILDを実行しません。本文不足や未確認版は配布を停止します。
 
+[Run #7](https://github.com/sunnytruck/MirrorDock/actions/runs/39750391414)で判明した`gsfonts`は、コピー対象のフォント設定13件の所有者です。20200910-3の設定を対応ソース内のコミット`c15105598aa7eb256b1ebfcecd3d078801521e73`と照合し、AGPLv3本文・フォント埋め込み例外・READMEを収集します。埋め込み例外を、設定ファイルやフォント自体の再配布義務の免除として扱いません。DLL以外の付属データにも所有者・ソース・通知の検査を適用します。
+
 ## 所有者検索の改行境界（Run #3の修正）
 
 Run #3はUxPlayのリンク・DLL収集まで成功し、`pacman -Qqo`が`avcodec-63.dll`を見つけられず停止しました。元コードはUCRT64版Pythonの`print()`をリダイレクトして一覧を作り、Bashの`read -r`で読み取っていました。Windowsの標準テキスト出力がCRLFを生成するため、Bashの検索引数には末尾CRが残ります。
