@@ -39,19 +39,28 @@ jobs:
             mingw-w64-ucrt-x86_64-gst-plugins-bad
             mingw-w64-ucrt-x86_64-gst-libav
       - name: Test packaging logic
+        id: packaging_tests
         run: |
           python -VV
           python -m unittest discover -v -s scripts/engine -p 'test_*.py'
-      - name: Build fixed upstream UxPlay
+      - name: Fetch exact upstream revision
+        id: fetch_upstream
         run: |
           set -euo pipefail
-          git clone https://github.com/FDH2/UxPlay.git out/UxPlay
-          git -C out/UxPlay checkout --detach f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
+          mkdir -p out/UxPlay
+          git -C out/UxPlay init
+          git -C out/UxPlay fetch --depth=1 https://github.com/FDH2/UxPlay.git f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
+          git -C out/UxPlay checkout --detach FETCH_HEAD
           test "$(git -C out/UxPlay rev-parse HEAD)" = f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
+      - name: Build fixed upstream UxPlay
+        id: build_engine
+        run: |
+          set -euo pipefail
           test "$(pkg-config --modversion openssl | cut -d. -f1)" -ge 3
           cmake -S out/UxPlay -B out/UxPlay/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNO_X11_DEPS=ON -DUSE_DNS_SD=OFF
           cmake --build out/UxPlay/build --parallel 2
       - name: Assemble dependency closure
+        id: collect_dependencies
         run: |
           set -euo pipefail
           python scripts/engine/bundle.py \
@@ -62,12 +71,15 @@ jobs:
             --objdump "$(cygpath -w /ucrt64/bin/objdump.exe)" \
             --inventory "$(cygpath -w "$PWD/out/inventory.json")"
       - name: Require matching sources and license notices
+        id: collect_sources
         run: |
           set -euo pipefail
           bash scripts/engine/collect-sources.sh "$PWD/out/runtime" "$PWD/out/inventory.json" "$PWD/out/sources" "$PWD/out/UxPlay"
       - name: Verify isolated runtime
+        id: verify_runtime
         run: python scripts/engine/verify-runtime.py out/runtime
       - name: Create runtime and corresponding-source ZIPs
+        id: create_archives
         run: |
           set -euo pipefail
           mkdir -p out/artifacts
@@ -85,6 +97,7 @@ jobs:
                   if path.is_file(): archive.write(path,path.relative_to(root).as_posix())
           PY
       - name: Verify final engine ZIP
+        id: verify_archive
         run: python scripts/engine/bundle.py --verify-archive out/artifacts/MirrorDock-Engine-Windows.zip
       - uses: actions/upload-artifact@v4
         id: engine_artifact
@@ -92,20 +105,36 @@ jobs:
           name: MirrorDock-Engine-Windows-and-Sources
           path: out/artifacts/*.zip
           if-no-files-found: error
-      - name: Record completed verification and artifact link
+      - name: Report verification outcomes
+        if: always()
+        shell: pwsh
         env:
-          ENGINE_ARTIFACT_URL: ${{ steps.engine_artifact.outputs.artifact-url }}
+          MD_TESTS: ${{ steps.packaging_tests.outcome }}
+          MD_FETCH: ${{ steps.fetch_upstream.outcome }}
+          MD_BUILD: ${{ steps.build_engine.outcome }}
+          MD_DEPENDENCIES: ${{ steps.collect_dependencies.outcome }}
+          MD_SOURCES: ${{ steps.collect_sources.outcome }}
+          MD_RUNTIME: ${{ steps.verify_runtime.outcome }}
+          MD_ARCHIVES: ${{ steps.create_archives.outcome }}
+          MD_ZIP_CHECK: ${{ steps.verify_archive.outcome }}
+          MD_UPLOAD: ${{ steps.engine_artifact.outcome }}
+          MD_ARTIFACT_URL: ${{ steps.engine_artifact.outputs.artifact-url }}
         run: |
-          python - <<'PY_SUMMARY'
-          import os
-          from pathlib import Path
-          text = """Engine checks completed:
-          - Packaging tests completed; see test log for any skipped cases.
-          - Fixed upstream UxPlay compiled on Windows.
-          - Dependency closure, sources and license notices collected.
-          - Isolated runtime help/plugins checked.
-          - Final engine ZIP reopened and all manifest hashes checked.
-          - Runtime/source artifact uploaded: """ + os.environ['ENGINE_ARTIFACT_URL'] + "\n\nPhysical iPhone/Windows AirPlay reception remains untested.\n"
-          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a', encoding='utf-8') as summary:
-              summary.write(text)
-          PY_SUMMARY
+          $rows = @(
+            '| Check | Outcome |',
+            '| --- | --- |',
+            "| Python packaging tests | $env:MD_TESTS |",
+            "| Fetch exact upstream revision | $env:MD_FETCH |",
+            "| UxPlay Windows build | $env:MD_BUILD |",
+            "| DLL dependency closure | $env:MD_DEPENDENCIES |",
+            "| Corresponding sources and licenses | $env:MD_SOURCES |",
+            "| Isolated runtime check | $env:MD_RUNTIME |",
+            "| ZIP creation | $env:MD_ARCHIVES |",
+            "| Final ZIP integrity check | $env:MD_ZIP_CHECK |",
+            "| Artifact upload | $env:MD_UPLOAD |"
+          )
+          $rows | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          if ($env:MD_UPLOAD -eq 'success' -and $env:MD_ARTIFACT_URL) {
+            "`n[Runtime and corresponding-source artifact]($env:MD_ARTIFACT_URL)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          }
+          "`nSee the test log for skipped cases. Physical iPhone/Windows AirPlay reception remains untested." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
