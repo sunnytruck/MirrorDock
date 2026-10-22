@@ -60,15 +60,6 @@ obtain_package_archive() {
     _package_archive_error "Multiple exact archives found for $package $installed_version"
     return 1
   fi
-  if (( ${#candidates[@]} == 1 )); then
-    archive=${candidates[0]}
-    if [[ -f "$archive.sig" ]]; then
-      pacman-key --verify "$archive.sig" "$archive" >&2 || { _package_archive_error "Cached archive signature failed for $package"; return 1; }
-      _package_archive_metadata_matches "$archive" "$package" "$installed_version" || return 1
-      printf '%s\n' "$archive"
-      return 0
-    fi
-  fi
 
   # setup-msys2 deliberately clears the package cache after saving its own cache.
   # Re-fetch only if the current repository still has the exact installed version.
@@ -105,8 +96,10 @@ obtain_package_archive() {
     directory=$download_cache
   fi
   # libalpm checks package validity/signatures before the DOWNLOADONLY return.
-  # This also revalidates an existing archive using the sync database's PGP data
-  # when no detached .sig is retained on disk.
+  # Revalidate both cached and newly downloaded archives through this same path.
+  # libalpm uses the sync database's PGP data and the effective required/trusted
+  # policy. A separate pacman-key process is neither needed nor appropriate:
+  # it can demand keyring permissions unavailable to a non-administrator runner.
   pacman -Sw --noconfirm --cachedir "$directory" -- "$repository/$package" >&2 || {
     _package_archive_error "Verified package download failed for $package $installed_version"
     return 1
@@ -116,9 +109,6 @@ obtain_package_archive() {
   if [[ -n "$configured" ]]; then mapfile -t candidates <<< "$configured"; fi
   (( ${#candidates[@]} == 1 )) || { _package_archive_error "Expected one exact archive after verified download for $package $installed_version, found ${#candidates[@]}"; return 1; }
   archive=${candidates[0]}
-  if [[ -f "$archive.sig" ]]; then
-    pacman-key --verify "$archive.sig" "$archive" >&2 || { _package_archive_error "Downloaded archive signature failed for $package"; return 1; }
-  fi
   _package_archive_metadata_matches "$archive" "$package" "$installed_version" || return 1
   printf '%s\n' "$archive"
 }

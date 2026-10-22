@@ -49,7 +49,7 @@ printf 'pacman' >> "$MOCK_LOG"; printf ' <%s>' "$@" >> "$MOCK_LOG"; printf '\\n'
 if [[ "$1" == -Sp ]]; then
   printf 'ucrt64 %s %s\\n' "$MOCK_PACKAGE" "$MOCK_REPO_VERSION"
 elif [[ "$1" == -Sw ]]; then
-  [[ "$MOCK_DOWNLOAD_FAIL" == 0 ]] || { printf 'PGP signature validation failed\\n' >&2; exit 42; }
+  [[ "$MOCK_DOWNLOAD_FAIL" == 0 && "$MOCK_SIG_FAIL" == 0 ]] || { printf 'PGP signature validation failed\\n' >&2; exit 42; }
   destination=''
   while (( $# )); do
     if [[ "$1" == --cachedir ]]; then destination=$2; shift; fi
@@ -64,8 +64,8 @@ else printf 'Unexpected pacman command\\n' >&2; exit 91; fi
 ''')
         self.stub('pacman-key', '''
 printf 'pacman-key' >> "$MOCK_LOG"; printf ' <%s>' "$@" >> "$MOCK_LOG"; printf '\\n' >> "$MOCK_LOG"
-[[ "$1" == --verify && -f "$2" && -f "$3" && "$MOCK_SIG_FAIL" == 0 ]] || exit 43
-printf 'trusted detached signature valid\\n'
+printf 'Unexpected standalone keyring access\\n' >&2
+exit 43
 ''')
         self.stub('bsdtar', 'exec tar "$@"\n')
 
@@ -101,8 +101,9 @@ printf 'trusted detached signature valid\\n'
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertTrue(result.stdout.strip().endswith(file.name))
         self.assertEqual(1, result.stdout.count('\n'))
-        self.assertIn('trusted detached signature', result.stderr)
-        self.assertNotIn(' <-Sw>', self.commands())
+        self.assertIn('download and required PGP validation', result.stderr)
+        self.assertIn(' <-Sw>', self.commands())
+        self.assertNotIn('pacman-key', self.commands())
 
     def test_empty_setup_action_cache_downloads_exact_version_without_install(self):
         result = self.run_helper()
@@ -122,6 +123,16 @@ printf 'trusted detached signature valid\\n'
         self.assertNotIn(' <-Sw>', self.commands())
         self.assertEqual('', result.stdout)
 
+    def test_cached_sidecar_cannot_bypass_repository_version_check(self):
+        self.archive(self.cache / f'{PACKAGE}-{VERSION}-any.pkg.tar.gz', signature=True)
+        self.environment['MOCK_REPO_VERSION'] = '3.16.0-1'
+        result = self.run_helper()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('differs from installed', result.stderr)
+        self.assertNotIn(' <-Sw>', self.commands())
+        self.assertNotIn('pacman-key', self.commands())
+        self.assertEqual('', result.stdout)
+
     def test_duplicate_archives_in_distinct_caches_are_rejected(self):
         other = self.root / 'second cache'
         self.archive(self.cache / f'{PACKAGE}-{VERSION}-any.pkg.tar.gz', signature=True)
@@ -132,13 +143,17 @@ printf 'trusted detached signature valid\\n'
         self.assertIn('Multiple exact archives', result.stderr)
         self.assertEqual('', result.stdout)
 
-    def test_cached_signature_failure_is_not_bypassed_by_redownload(self):
+    def test_cached_package_failing_trusted_database_signature_is_rejected_without_retry(self):
         self.archive(self.cache / f'{PACKAGE}-{VERSION}-any.pkg.tar.gz', signature=True)
+        # Model libalpm rejecting the archive against the trusted sync DB signature.
+        # An arbitrary detached sidecar is not authoritative when DB PGP data exists.
         self.environment['MOCK_SIG_FAIL'] = '1'
         result = self.run_helper()
         self.assertNotEqual(0, result.returncode)
-        self.assertIn('signature failed', result.stderr)
-        self.assertNotIn(' <-Sw>', self.commands())
+        self.assertIn('PGP signature validation failed', result.stderr)
+        self.assertIn('Verified package download failed', result.stderr)
+        self.assertEqual(1, self.commands().count(' <-Sw>'))
+        self.assertNotIn('pacman-key', self.commands())
         self.assertEqual('', result.stdout)
 
     def test_download_signature_failure_is_fatal(self):
@@ -166,6 +181,7 @@ printf 'trusted detached signature valid\\n'
 
     def test_msys_epoch_tilde_is_preserved(self):
         version = '1~3.15.2-1'
+        self.environment['MOCK_REPO_VERSION'] = version
         file = self.archive(self.cache / f'{PACKAGE}-{version}-any.pkg.tar.gz', version=version, signature=True)
         result = self.run_helper(version)
         self.assertEqual(0, result.returncode, result.stderr)

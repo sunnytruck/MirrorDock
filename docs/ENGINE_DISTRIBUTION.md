@@ -51,6 +51,9 @@ Run #3の所有者判定失敗は、Windows版Pythonの標準出力のCRLFをBas
 
 Run #4で判明した別の失敗は、`setup-msys2`がセットアップ終了時に`pacman -Scc`でキャッシュを消去することでした。収集処理は`pacman-conf CacheDir`を参照し、空の場合は導入済みと完全に同じ版だけを`pacman -Sw`で再取得します。信頼済み署名を必須とする設定と`.PKGINFO`を照合し、別版への置換やパッケージ更新はしません。MSYS2のepoch区切り`~`も版数に保持します。
 
+[Run #5](https://github.com/sunnytruck/MirrorDock/actions/runs/39747233963)では、`pacman -Sw`の鍵・整合性検証後に追加した`pacman-key --verify`が、非root実行時の`lock-never`設定要件で失敗しました。鍵設定を変更せず、キャッシュ済みの場合も含めて`pacman -Sw`の必須・信頼済み署名検証へ統一します。libalpmは`check_validity()`を成功させてからdownload-only処理を終了するため、署名検査の省略にはなりません。
+この順序と署名ポリシーの適用は、MSYS2 pacmanの公式実装 [sync.c](https://github.com/msys2/msys2-pacman/blob/master/lib/libalpm/sync.c) と [be_package.c](https://github.com/msys2/msys2-pacman/blob/master/lib/libalpm/be_package.c) で確認しました。
+
 公式FFmpeg 9.0.2-1バイナリパッケージには`share/licenses`の本文がないことを実物で確認しました。対応ソースの`ffmpeg-9.0.2.tar.xz`には`LICENSE.md`とGPL/LGPL本文4件が存在するため、このパッケージと`spdx:GPL-3.0-or-later`の組み合わせに限り、その5文書を原文のまま収集します。`source-provenance.json`に取得元・各SHA-256を記録します。未確認のパッケージにこの例外を適用せず、本文不足・曖昧な配置・リンクは失敗にします。
 
 ## 所有者検索の改行境界（Run #3の修正）
