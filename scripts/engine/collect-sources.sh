@@ -93,10 +93,13 @@ cp scripts/engine/SOURCES-README.txt "$sources/README.txt"
 python - "$sources" <<'PY'
 from pathlib import Path
 import hashlib,sys
-root=Path(sys.argv[1])
+sys.path.insert(0, 'scripts/engine')
+from bundle import normalized_path
+root=normalized_path(sys.argv[1])
 lines=[]
-for p in sorted(root.rglob('*')):
-    if p.is_file() and p.name != 'files.sha256':
+for raw in sorted(root.rglob('*')):
+    p=normalized_path(raw)
+    if p.is_file() and p != root/'files.sha256':
         lines.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(root).as_posix()+'\n')
 (root/'files.sha256').write_text(''.join(lines),encoding='utf-8',newline='\n')
 PY

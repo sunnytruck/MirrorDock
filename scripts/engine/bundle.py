@@ -26,8 +26,29 @@ ELEMENTS = (
 def imports_from_objdump(output: str) -> list[str]:
     return re.findall(r"^\s*DLL Name:\s*([^\s]+)\s*$", output, re.MULTILINE | re.IGNORECASE)
 
+def normalized_path(value: str | Path) -> Path:
+    # MSYS2 sets ntpath.sep to '/' under MSYSTEM. Python 3.14 iterdir()
+    # preserves Windows DirEntry.path (which may contain '\\') without reparsing
+    # it, so raw child Paths need not compare/hash like paths built with '/'.
+    # Reparse every filesystem boundary. Keep symlinks intact for copy_file's
+    # rejection; resolve() must not replace the source path being packaged.
+    return Path(os.path.abspath(os.path.normpath(os.fspath(value))))
+
+def path_identity(value: str | Path) -> str:
+    text = os.fspath(normalized_path(value))
+    return text.replace("\\", "/").casefold() if os.name == "nt" else text
+
 def index_files(directory: Path) -> dict[str, Path]:
-    return {p.name.casefold(): p for p in directory.iterdir() if p.is_file()}
+    result: dict[str, Path] = {}
+    for raw in normalized_path(directory).iterdir():
+        path = normalized_path(raw)
+        if not path.is_file():
+            continue
+        key = path.name.casefold()
+        if key in result:
+            raise RuntimeError(f"Ambiguous case-insensitive DLL filename: {path.name}")
+        result[key] = path
+    return result
 
 def resolves_api_set(name: str) -> bool:
     # API set contracts can be virtual. Ask the Windows loader rather than
@@ -50,19 +71,19 @@ def resolves_api_set(name: str) -> bool:
 def dependency_closure(seeds: list[Path], prefix_bin: Path, system: Path, inspect, api_resolver=resolves_api_set) -> tuple[list[Path], list[str]]:
     available = index_files(prefix_bin)
     system_files = index_files(system)
-    pending = list(seeds)
+    pending = [normalized_path(seed) for seed in seeds]
     visited: dict[str, Path] = {}
     excluded: set[str] = set()
     while pending:
         binary = pending.pop()
-        key = str(binary.resolve()).casefold()
+        key = path_identity(binary)
         if key in visited:
             continue
         if not binary.is_file():
             raise RuntimeError(f"Required binary is missing: {binary.name}")
         visited[key] = binary
         for name in inspect(binary):
-            if Path(name).name != name or "/" in name or "\\" in name:
+            if not name or name in (".", "..") or Path(name).name != name or any(c in name for c in "/\\:"):
                 raise RuntimeError("Unsafe DLL import name")
             dependency = available.get(name.casefold())
             if dependency is not None:
@@ -74,6 +95,7 @@ def dependency_closure(seeds: list[Path], prefix_bin: Path, system: Path, inspec
     return sorted(visited.values(), key=lambda p: str(p).casefold()), sorted(excluded, key=str.casefold)
 
 def copy_file(source: Path, target: Path) -> None:
+    source, target = normalized_path(source), normalized_path(target)
     if source.is_symlink():
         raise RuntimeError(f"Symlink must not enter runtime: {source.name}")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -82,6 +104,7 @@ def copy_file(source: Path, target: Path) -> None:
     shutil.copy2(source, target)
 
 def assemble(prefix: Path, executable: Path, output: Path, system: Path, objdump: Path, inventory: Path) -> None:
+    prefix, executable, output, system, objdump, inventory = map(normalized_path, (prefix, executable, output, system, objdump, inventory))
     if output.exists():
         raise RuntimeError("Output directory already exists; use a fresh output path")
     plugins = [prefix / "lib/gstreamer-1.0" / f"libgst{name}.dll" for name in PLUGINS]
@@ -102,7 +125,8 @@ def assemble(prefix: Path, executable: Path, output: Path, system: Path, objdump
     # Fontconfig/Pango may need their data files for UxPlay's cover-art text.
     for resource in (prefix / "etc/fonts", prefix / "share/fontconfig"):
         if resource.is_dir():
-            for source in sorted(resource.rglob("*")):
+            for raw in sorted(resource.rglob("*")):
+                source = normalized_path(raw)
                 if source.is_file():
                     source.resolve().relative_to(prefix.resolve())
                     relative=source.relative_to(prefix)
@@ -116,7 +140,8 @@ def assemble(prefix: Path, executable: Path, output: Path, system: Path, objdump
     inventory.write_text(json.dumps({"prefix_files": origins, "required_elements": ELEMENTS}, indent=2) + "\n", encoding="utf-8")
 
 def finalize(runtime: Path, archive: Path) -> None:
-    paths = sorted((p for p in runtime.rglob("*") if p.is_file() and p != runtime / "files.sha256"), key=lambda p: p.relative_to(runtime).as_posix())
+    runtime, archive = normalized_path(runtime), normalized_path(archive)
+    paths = sorted((normalized_path(p) for p in runtime.rglob("*") if p.is_file() and normalized_path(p) != runtime / "files.sha256"), key=lambda p: p.relative_to(runtime).as_posix())
     lines = []
     for path in paths:
         if path.is_symlink():
@@ -127,23 +152,73 @@ def finalize(runtime: Path, archive: Path) -> None:
         lines.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}\n")
     (runtime / "files.sha256").write_text("".join(lines), encoding="utf-8", newline="\n")
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as result:
-        for path in sorted(runtime.rglob("*")):
+        for raw in sorted(runtime.rglob("*")):
+            path = normalized_path(raw)
             if path.is_file():
                 result.write(path, path.relative_to(runtime).as_posix())
+
+def verify_archive(archive: Path) -> int:
+    """Reopen the actual runtime ZIP; check names, metadata, CRC and every SHA256."""
+    with zipfile.ZipFile(normalized_path(archive)) as bundle:
+        entries = {}
+        folded = set()
+        for entry in bundle.infolist():
+            name = entry.filename
+            if entry.is_dir():
+                continue
+            if (not name or any(c in name for c in "\\:\r\n") or
+                    any(part in ("", ".", "..") for part in name.split("/"))):
+                raise RuntimeError("Unsafe runtime ZIP path")
+            if name.casefold() in folded:
+                raise RuntimeError("Duplicate runtime ZIP path")
+            folded.add(name.casefold())
+            entries[name] = entry
+        if "files.sha256" not in entries or entries["files.sha256"].file_size > 2_000_000:
+            raise RuntimeError("Missing or oversized runtime ZIP manifest")
+        hashes = {}
+        for line in bundle.read("files.sha256").decode("utf-8").splitlines():
+            if not re.fullmatch(r"[0-9a-f]{64}  .+", line):
+                raise RuntimeError("Invalid runtime ZIP manifest")
+            digest, name = line.split("  ", 1)
+            if name in hashes:
+                raise RuntimeError("Duplicate runtime ZIP manifest entry")
+            hashes[name] = digest
+        if set(hashes) != set(entries) - {"files.sha256"}:
+            raise RuntimeError("Runtime ZIP contents do not match manifest")
+        for name, expected in hashes.items():
+            digest = hashlib.sha256()
+            with bundle.open(entries[name]) as data:
+                for chunk in iter(lambda: data.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            if digest.hexdigest() != expected:
+                raise RuntimeError(f"Runtime ZIP checksum mismatch: {name}")
+        if "bin/uxplay.exe" not in entries or "mirrordock-engine.properties" not in entries:
+            raise RuntimeError("Runtime ZIP is missing engine metadata or executable")
+        metadata = dict(line.split("=", 1) for line in bundle.read("mirrordock-engine.properties").decode("utf-8").splitlines() if "=" in line)
+        expected = {"format": "1", "platform": "windows-x64", "upstream.commit": UPSTREAM_COMMIT, "executable": "bin/uxplay.exe"}
+        if any(metadata.get(key) != value for key, value in expected.items()):
+            raise RuntimeError("Unexpected runtime ZIP metadata")
+        return len(hashes)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prefix", type=Path)
     parser.add_argument("--executable", type=Path)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--system", type=Path)
     parser.add_argument("--objdump", type=Path)
     parser.add_argument("--inventory", type=Path)
     parser.add_argument("--archive", type=Path)
+    parser.add_argument("--verify-archive", type=Path)
     args = parser.parse_args()
-    if args.archive:
+    if args.verify_archive:
+        count = verify_archive(args.verify_archive)
+        print(f"Runtime ZIP verified: {count} files, all checksums passed")
+    elif args.archive:
+        if args.output is None:
+            parser.error("Archive creation requires --output")
         finalize(args.output, args.archive)
     else:
-        if any(value is None for value in (args.prefix, args.executable, args.system, args.objdump, args.inventory)):
-            parser.error("Assembly requires prefix/executable/system/objdump/inventory")
+        if any(value is None for value in (args.prefix, args.executable, args.output, args.system, args.objdump, args.inventory)):
+            parser.error("Assembly requires prefix/executable/output/system/objdump/inventory")
         assemble(args.prefix, args.executable, args.output, args.system, args.objdump, args.inventory)

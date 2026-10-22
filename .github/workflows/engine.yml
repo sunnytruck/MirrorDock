@@ -39,7 +39,9 @@ jobs:
             mingw-w64-ucrt-x86_64-gst-plugins-bad
             mingw-w64-ucrt-x86_64-gst-libav
       - name: Test packaging logic
-        run: python -m unittest discover -s scripts/engine -p 'test_*.py'
+        run: |
+          python -VV
+          python -m unittest discover -v -s scripts/engine -p 'test_*.py'
       - name: Build fixed upstream UxPlay
         run: |
           set -euo pipefail
@@ -73,13 +75,37 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import zipfile
-          root=Path('out/sources')
+          import sys
+          sys.path.insert(0, 'scripts/engine')
+          from bundle import normalized_path
+          root=normalized_path('out/sources')
           with zipfile.ZipFile('out/artifacts/MirrorDock-Engine-Corresponding-Source.zip','w',compression=zipfile.ZIP_STORED) as archive:
-              for path in sorted(root.rglob('*')):
+              for raw in sorted(root.rglob('*')):
+                  path=normalized_path(raw)
                   if path.is_file(): archive.write(path,path.relative_to(root).as_posix())
           PY
+      - name: Verify final engine ZIP
+        run: python scripts/engine/bundle.py --verify-archive out/artifacts/MirrorDock-Engine-Windows.zip
       - uses: actions/upload-artifact@v4
+        id: engine_artifact
         with:
           name: MirrorDock-Engine-Windows-and-Sources
           path: out/artifacts/*.zip
           if-no-files-found: error
+      - name: Record completed verification and artifact link
+        env:
+          ENGINE_ARTIFACT_URL: ${{ steps.engine_artifact.outputs.artifact-url }}
+        run: |
+          python - <<'PY_SUMMARY'
+          import os
+          from pathlib import Path
+          text = """Engine checks completed:
+          - Packaging tests completed; see test log for any skipped cases.
+          - Fixed upstream UxPlay compiled on Windows.
+          - Dependency closure, sources and license notices collected.
+          - Isolated runtime help/plugins checked.
+          - Final engine ZIP reopened and all manifest hashes checked.
+          - Runtime/source artifact uploaded: """ + os.environ['ENGINE_ARTIFACT_URL'] + "\n\nPhysical iPhone/Windows AirPlay reception remains untested.\n"
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a', encoding='utf-8') as summary:
+              summary.write(text)
+          PY_SUMMARY
