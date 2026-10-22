@@ -66,7 +66,7 @@ Windows 11 x64 向けの日本語 JavaFX AirPlay 受信ランチャーです。i
 クラウド Linux x64 で `build`、単体テスト36件（失敗0・スキップ0）、`installDist` を実行しました。
 仮想画面で GUI 起動と UxPlay 未設定時のエラー表示を検証しました。テストのプロセス起動・停止には模擬エンジンを使用しています。実際の UxPlay 受信成功を示すものではありません。
 
-配布処理のPythonテストはLinuxで14件成功し、Windows専用のパス検証1件は未実行です。Windowsでの全件結果はCIで別途確認が必要です。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。
+配布処理のPythonテストはLinuxで20件成功し、Windows専用のパス検証1件は未実行です。Windowsでの全件結果はCIで別途確認が必要です。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。
 
 テスト対象：従来の設定・プロセス・画面位置補正に加え、ZIPの導入/破損/危険なパス/重複/形式、DLLエラー分類、診断タイムアウト時の停止、ファイアウォール結果の慎重な解釈、ポータブル環境設定。診断プロセスも模擬エンジンを使い、Windows固有の実行自体は未確認です。
 

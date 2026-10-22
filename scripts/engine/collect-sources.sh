@@ -10,16 +10,30 @@ inventory=$2
 sources=$3
 upstream=$4
 mkdir -p "$sources/msys2" "$sources/binary-metadata" "$sources/build-scripts"
-python - "$inventory" <<'PY' > "$sources/prefix-files.txt"
-import json,sys
-for value in json.load(open(sys.argv[1]))['prefix_files'].values():
-    print(value)
-PY
+fail() {
+  local message=$1
+  message=${message//'%'/'%25'}
+  message=${message//$'\r'/'%0D'}
+  message=${message//$'\n'/'%0A'}
+  printf '::error title=Engine source collection::%s\n' "$message" >&2
+  exit 1
+}
+python scripts/engine/package_files.py "$inventory" "$sources/prefix-files.txt"
 printf 'relative_path\tpackage\n' > "$sources/file-packages.tsv"
 while IFS= read -r original; do
-  owner=$(pacman -Qqo "/ucrt64/$original")
-  test -n "$owner"
+  if [[ -z "$original" || "$original" =~ [[:cntrl:]] ]]; then
+    printf 'Invalid inventory path: %q\n' "$original" >&2
+    fail "Control character or empty path at Python/Bash inventory boundary"
+  fi
+  if ! owner=$(pacman -Qqo "/ucrt64/$original"); then
+    printf 'Ownership lookup argument: %q\n' "/ucrt64/$original" >&2
+    fail "No package owns validated prefix file $original; refusing to publish"
+  fi
+  [[ "$owner" =~ ^[a-zA-Z0-9@+_.-]+$ ]] || fail "Expected one unambiguous package owner for $original"
   printf '%s\t%s\n' "$original" "$owner" >> "$sources/file-packages.tsv"
+  if [[ "$original" == bin/avcodec-*.dll ]]; then
+    printf '::notice title=Verified avcodec package::%s is owned by %s\n' "$original" "$owner"
+  fi
 done < "$sources/prefix-files.txt"
 tail -n +2 "$sources/file-packages.tsv" | cut -f2 | sort -u > "$sources/packages.txt"
 printf 'package\tversion\tpkgbase\tsource_archive\tlicenses\n' > "$sources/packages.tsv"
@@ -30,8 +44,7 @@ while IFS= read -r name; do
   filename_version=${installed_version#*:}
   mapfile -t candidates < <(find /var/cache/pacman/pkg -maxdepth 1 -type f -name "${name}-${filename_version}-*.pkg.tar.*" ! -name '*.sig')
   if [ "${#candidates[@]}" -ne 1 ]; then
-    printf 'Expected one exact cached package for %s %s, found %s\n' "$name" "$installed_version" "${#candidates[@]}" >&2
-    exit 1
+    fail "Expected one exact cached package for $name $installed_version, found ${#candidates[@]}"
   fi
   metadata="$sources/binary-metadata/$name.PKGINFO"
   bsdtar -xOf "${candidates[0]}" .PKGINFO > "$metadata"
@@ -48,10 +61,12 @@ while IFS= read -r name; do
   [[ "${pkgver#*:}" =~ ^[a-zA-Z0-9_+.-]+$ ]]
   archive="${pkgbase}-${pkgver#*:}.src.tar.zst"
   if [ ! -f "$sources/msys2/$archive" ]; then
-    curl --fail --location --show-error --retry 2 "https://repo.msys2.org/mingw/sources/$archive" -o "$sources/msys2/$archive"
+    if ! curl --fail --location --show-error --retry 2 "https://repo.msys2.org/mingw/sources/$archive" -o "$sources/msys2/$archive"; then
+      fail "Matching source archive download failed: $archive"
+    fi
     bsdtar -tf "$sources/msys2/$archive" > "$sources/msys2/$archive.contents.txt"
     if ! grep -Eq '(^|/)PKGBUILD$' "$sources/msys2/$archive.contents.txt"; then
-      echo "Source archive is missing PKGBUILD: $archive" >&2; exit 1
+      fail "Source archive is missing PKGBUILD: $archive"
     fi
   fi
   licenses=$(awk -F ' = ' '$1=="license" {printf "%s;", $2}' "$metadata")
@@ -72,8 +87,7 @@ while IFS= read -r name; do
     esac
   done < <(pacman -Qlq "$name")
   if [ "$license_count" -eq 0 ]; then
-    echo "No package-provided license notices for $name; do not publish until reviewed." >&2
-    exit 1
+    fail "No package-provided license notices for $name; do not publish until reviewed"
   fi
 done < "$sources/packages.txt"
 mkdir -p "$runtime/share/licenses/UxPlay"

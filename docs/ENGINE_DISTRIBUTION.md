@@ -47,6 +47,22 @@ GStreamerのcoreや多くのpluginはLGPLですが、**すべてのGStreamer関�
 
 MSYS2は、パッケージのlicense metadataと、通常`<prefix>/share/licenses/<real-package-name>/`に置くライセンス本文の両方を提供します。配置の例外もあるため、対象パッケージごとに確認します。source archiveは公式リポジトリの`mingw/sources`に置かれ、一般に`{pkgbase}-{version}.src.tar.zst`という名前です。binary packageの環境付き名称と`pkgbase`を混同せず、実際に配るバージョンに対応するものを取得します。
 
+## 所有者検索の改行境界（Run #3の修正）
+
+Run #3はUxPlayのリンク・DLL収集まで成功し、`pacman -Qqo`が`avcodec-63.dll`を見つけられず停止しました。元コードはUCRT64版Pythonの`print()`をリダイレクトして一覧を作り、Bashの`read -r`で読み取っていました。Windowsの標準テキスト出力がCRLFを生成するため、Bashの検索引数には末尾CRが残ります。
+
+変更前の本物のスクリプトへWindows相当のstdout変換を適用すると、検索引数が`/ucrt64/bin/avcodec-63.dll`＋`0x0D`となり所有者取得に失敗することを再現しました。修正は生成側のUTF-8/LF固定ファイル出力と、受信側の制御文字拒否です。黙って末尾を削ったり、未知の所有者をFFmpegへ割り当てたりしません。実際の`pacman`が返す所有者をmanifestへ記録します。
+
+MSYS2のFFmpeg recipeはUCRT64で`mingw-w64-ucrt-x86_64-ffmpeg`を生成します。FFmpeg 9系のlibavcodec majorは63で、MinGWの公式インストール規則は`bin/avcodec-63.dll`を通常ファイルとして配置します。今回の失敗をDLLの改名・シンボリックリンク・実際の未所有ファイルで説明する証拠はありません。修正後のCIでは実際の所有者を再確認し、取得できない場合は配布を止めます。
+
+根拠：
+
+- [Windows TextIOWrapperの改行変換](https://docs.python.org/3/library/io.html#io.TextIOWrapper)
+- [CPythonのWindows標準出力初期化](https://github.com/python/cpython/blob/v3.14.0/Python/pylifecycle.c)
+- [MSYS2 FFmpeg recipe](https://github.com/msys2/MINGW-packages/blob/master/mingw-w64-ffmpeg/PKGBUILD)
+- [FFmpeg libavcodec major 63](https://github.com/FFmpeg/FFmpeg/blob/n9.0.2/libavcodec/version_major.h)
+- [FFmpeg MinGW DLL名・配置規則](https://github.com/FFmpeg/FFmpeg/blob/n9.0.2/configure)
+
 ## 別プロセス構成と残るリスク
 
 MirrorDockは標準CLIとログでUxPlayを別プロセスとして起動します。GPLv3は独立したプログラムを集めたaggregateを認めるため、同じZIPやインストーラーに置くだけでJavaアプリ全体へGPLが必ず適用されるとは断定できません。一方、別プロセスなら常に無関係になるとも断定できません。独立性を保ち、密接な独自IPCやライブラリへの直接リンクに変更する場合は再評価してください。MirrorDock自身の公開ライセンスはリポジトリ所有者が決める必要があります。
