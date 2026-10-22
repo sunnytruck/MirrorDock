@@ -1,0 +1,85 @@
+name: Experimental Windows engine
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/engine.yml'
+      - 'scripts/engine/**'
+permissions:
+  contents: read
+jobs:
+  engine:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git curl tar gzip zstd
+            mingw-w64-ucrt-x86_64-python
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-binutils
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-openssl
+            mingw-w64-ucrt-x86_64-libplist
+            mingw-w64-ucrt-x86_64-gstreamer
+            mingw-w64-ucrt-x86_64-gst-plugins-base
+            mingw-w64-ucrt-x86_64-gst-plugins-good
+            mingw-w64-ucrt-x86_64-gst-plugins-bad
+            mingw-w64-ucrt-x86_64-gst-libav
+      - name: Test packaging logic
+        run: python -m unittest discover -s scripts/engine -p 'test_*.py'
+      - name: Build fixed upstream UxPlay
+        run: |
+          set -euo pipefail
+          git clone https://github.com/FDH2/UxPlay.git out/UxPlay
+          git -C out/UxPlay checkout --detach f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
+          test "$(git -C out/UxPlay rev-parse HEAD)" = f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
+          test "$(pkg-config --modversion openssl | cut -d. -f1)" -ge 3
+          cmake -S out/UxPlay -B out/UxPlay/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNO_X11_DEPS=ON -DUSE_DNS_SD=OFF
+          cmake --build out/UxPlay/build --parallel 2
+      - name: Assemble dependency closure
+        run: |
+          set -euo pipefail
+          python scripts/engine/bundle.py \
+            --prefix "$(cygpath -w /ucrt64)" \
+            --executable "$(cygpath -w "$PWD/out/UxPlay/build/uxplay.exe")" \
+            --output "$(cygpath -w "$PWD/out/runtime")" \
+            --system "$(cygpath -w /c/Windows/System32)" \
+            --objdump "$(cygpath -w /ucrt64/bin/objdump.exe)" \
+            --inventory "$(cygpath -w "$PWD/out/inventory.json")"
+      - name: Require matching sources and license notices
+        run: |
+          set -euo pipefail
+          bash scripts/engine/collect-sources.sh "$PWD/out/runtime" "$PWD/out/inventory.json" "$PWD/out/sources" "$PWD/out/UxPlay"
+      - name: Verify isolated runtime
+        run: python scripts/engine/verify-runtime.py out/runtime
+      - name: Create runtime and corresponding-source ZIPs
+        run: |
+          set -euo pipefail
+          mkdir -p out/artifacts
+          python scripts/engine/bundle.py --output out/runtime --archive out/artifacts/MirrorDock-Engine-Windows.zip
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('out/sources')
+          with zipfile.ZipFile('out/artifacts/MirrorDock-Engine-Corresponding-Source.zip','w',compression=zipfile.ZIP_STORED) as archive:
+              for path in sorted(root.rglob('*')):
+                  if path.is_file(): archive.write(path,path.relative_to(root).as_posix())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MirrorDock-Engine-Windows-and-Sources
+          path: out/artifacts/*.zip
+          if-no-files-found: error

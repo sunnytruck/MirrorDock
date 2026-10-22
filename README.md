@@ -13,8 +13,9 @@ Windows 11 x64 向けの日本語 JavaFX AirPlay 受信ランチャーです。i
 ```
 
 配布用インストーラーがある場合はインストール後、スタートメニューの MirrorDock を開きます。
-UxPlay は別途準備してください。[INSTALL.md](INSTALL.md) に公式情報に基づく構築方法を記載しています。
-初回は「設定」で `C:\msys64\ucrt64\bin\uxplay.exe` を選択して保存します。
+初回は「受信エンジンの導入・診断」から、MirrorDock側のCIで作るエンジンZIPを導入します。利用者のMSYS2導入・ソースビルドは不要です。
+[INSTALL.md](INSTALL.md) にダウンロード・GUI操作の手順と、既にUxPlayがある場合の設定方法を記載しています。
+このエンジン配布は実験段階で、対応するCIが成功してArtifactsが生成されるまでは取得できません。
 信頼できる UxPlay のみ指定してください。受信は管理者権限なしで実行します。
 
 ## iPhone との接続
@@ -38,7 +39,10 @@ UxPlay は別途準備してください。[INSTALL.md](INSTALL.md) に公式情
 - 設定は `%LOCALAPPDATA%\MirrorDock\settings.properties`。Windows 以外は `~/.mirrordock`。
 - ログは任意で同フォルダーの `MirrorDock.log` に状態種別と時刻だけを保存。1 MB で1世代にローテーション。
 - 録画オプションなし。`UXPLAYRC` を空の専用設定に指定し、既存の `.uxplayrc` による録画や任意オプション追加を防止。
-- シェルを経由せず引数配列で起動。ファイアウォールの自動変更やアプリから外部サーバーへの通信なし。
+- シェルを経由せず引数配列で起動。ファイアウォールの自動変更や自動ダウンロードなし。利用者が押した配布ページのボタンだけがブラウザーを開きます。
+- エンジンZIPのGUI導入、パストラバーサル・重複パス・展開サイズ・SHA-256の検査。
+- 導入済みUxPlayの探索、ヘルプ起動診断、WindowsのDLL不足/形式不一致/初期化失敗の具体策。
+- 読み取り専用のファイアウォール診断。ブロック/許可ルール・パブリック接続を案内し、実際の遮断とは断定しません。
 
 `MainApplication` / `MainController` / `AirPlayService` / `UxPlayService` / `WindowManager` / `SettingsService` / `LogService` に責務を分離しています。
 
@@ -53,18 +57,23 @@ UxPlay は別途準備してください。[INSTALL.md](INSTALL.md) に公式情
 `packageWindows` は **Windows x64 上の JDK 21 + WiX 3.x（candle.exe / light.exe が PATH にあること）** が必要です。
 `build/installer/` に EXE インストーラーを生成し、jpackage が Java ランタイムを同梱します。UxPlay / Bonjour / MSYS2 / GStreamer DLL は同梱しません。
 `build/distributions/` の ZIP は JDK/JRE 21 の別途導入が必要です。Linux で生成した ZIP に Windows 用 JavaFX は入りません。Windows 配布物は Windows 上で再ビルドしてください。
-`.github/workflows/windows.yml` で Windows ビルド・単体テスト・インストーラー生成を実行できます（GitHub Actions の実行自体は本作業では未実施）。
+`.github/workflows/windows.yml` の初版はWindows CI成功を利用者の画面で確認しました。今回の改訂後のCI結果は別途確認が必要です。
+`.github/workflows/engine.yml` はUxPlayの固定SHAをWindowsでビルドし、DLL・プラグインと対応ソースを同じArtifactsにまとめます。CI内でバイナリパッケージの署名確認・対応ソース取得・DLL依存解決・プラグイン検査が失敗した場合は成果物を配布しません。初回のエンジンCI・実機受信は未確認です。
+同梱の実現可能性とライセンス義務は [docs/ENGINE_DISTRIBUTION.md](docs/ENGINE_DISTRIBUTION.md) を参照してください。
 
 ## 検証と未確認事項
 
-クラウド Linux x64 で `build`、単体テスト11件（失敗0・スキップ0）、`installDist` を実行しました。
+クラウド Linux x64 で `build`、単体テスト36件（失敗0・スキップ0）、`installDist` を実行しました。
 仮想画面で GUI 起動と UxPlay 未設定時のエラー表示を検証しました。テストのプロセス起動・停止には模擬エンジンを使用しています。実際の UxPlay 受信成功を示すものではありません。
 
-テスト対象：設定の往復・不正値・不正ファイル、未設定/不存在パス、引数安全性、プロセスの起動/停止/再起動/二重起動防止/異常終了、接続/切断ログ処理、画面位置補正。
+配布処理のPythonテスト8件も成功しました。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。
+
+テスト対象：従来の設定・プロセス・画面位置補正に加え、ZIPの導入/破損/危険なパス/重複/形式、DLLエラー分類、診断タイムアウト時の停止、ファイアウォール結果の慎重な解釈、ポータブル環境設定。診断プロセスも模擬エンジンを使い、Windows固有の実行自体は未確認です。
 
 **Windows PC と iPhone はこのクラウドにないため、次は未確認です。リリース前に必ず実施してください。**
 
-- [ ] Windows 11 x64 で JDK ビルド、GUI 起動、インストーラー生成・インストール・アンインストール。
+- [ ] 改訂版のWindows CI、エンジンCI、GUI起動、インストール・アンインストール（初版のアプリCI成功は確認済み）。
+- [ ] CIエンジンZIPの取得・GUI導入・DLL/プラグインの検査、Windows診断の実行。
 - [ ] 実際の UxPlay 起動、DLL / GStreamer / mDNS の準備とサービス広告。
 - [ ] iPhone の一覧に MirrorDock が表示され、映像と音声が出ること。
 - [ ] 縦横回転、アスペクト比と黒帯、最大化・最小化・Alt+Enter 全画面。

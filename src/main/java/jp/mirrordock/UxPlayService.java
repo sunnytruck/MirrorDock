@@ -52,7 +52,7 @@ public final class UxPlayService implements AirPlayService {
             ProcessBuilder builder=new ProcessBuilder(commands.apply(executable,settings)).redirectErrorStream(true);
             builder.directory(executable.getParent().toFile());
             // Prevent user UxPlay startup files from enabling recording or overriding privacy-sensitive defaults.
-            builder.environment().put("UXPLAYRC", emptyConfig().toString());
+            EngineEnvironment.configure(builder,executable,SettingsService.userDirectory());
             synchronized(this) {
                 if (run!=generation || !active) return;
                 child=builder.start(); process=child;
@@ -71,10 +71,11 @@ public final class UxPlayService implements AirPlayService {
                 while ((line=reader.readLine())!=null) parse(run,line);
             }
             int exit=child.waitFor();
-            emit(run,State.ERROR,"UxPlayが終了しました（終了コード "+exit+"）。DLL・GStreamer・mDNSを確認してください。原因を特定できません。");
+            emit(run,State.ERROR,exit==0 ? "UxPlayが終了しました。受信開始から再試行してください。原因を特定できません。" : EngineDiagnostics.fromExitCode(exit).displayText());
         } catch (IOException e) {
             String message=e.getMessage();
             if (child!=null) message="UxPlayとの通信に失敗しました。原因を特定できません。";
+            else if (message!=null && message.startsWith("Cannot run program")) message=EngineDiagnostics.launchFailure(e).displayText();
             else if (!(message!=null && (message.startsWith("UxPlay") || message.startsWith("実行") || message.startsWith("uxplay")))) message="UxPlayを起動できません。実行権限・DLL・パスを確認してください。原因を特定できません。";
             emit(run,State.ERROR,message);
         } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
@@ -82,11 +83,6 @@ public final class UxPlayService implements AirPlayService {
             if (child!=null) terminate(child);
             synchronized(this) { if (run==generation) {process=null;active=false;} }
         }
-    }
-    private static Path emptyConfig() throws IOException {
-        Path dir=SettingsService.userDirectory(); Files.createDirectories(dir);
-        Path config=dir.resolve("uxplay-empty.conf");
-        Files.writeString(config,"# Managed by MirrorDock: no recording, no custom commands.\n"); return config;
     }
     void parse(long run,String line) {
         String lower=line.toLowerCase(Locale.ROOT);

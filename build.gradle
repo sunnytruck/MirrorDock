@@ -31,9 +31,11 @@ distributions {
     main {
         contents {
             from('README.md', 'INSTALL.md')
+            from('docs') { into('docs') }
             into('lib/licenses') {
                 from('THIRD_PARTY_LICENSES.md')
                 from('licenses')
+                into('docs') { from('docs') }
             }
         }
     }
