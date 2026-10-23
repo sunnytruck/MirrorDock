@@ -17,11 +17,13 @@ public final class MainController implements AutoCloseable {
     private final WindowManager windows=new WindowManager();
     private final Label status=new Label("停止中"), message=new Label(), feedback=new Label();
     private final TextField name=new TextField(), executable=new TextField();
+    private final ComboBox<Integer> requestedFps=new ComboBox<>();
     private final CheckBox onTop=new CheckBox("最前面に固定"), audio=new CheckBox("音声を再生"),autoStart=new CheckBox("起動時に受信開始"),logging=new CheckBox("状態ログを保存（端末情報は保存しません）");
     private final Button start=new Button("受信開始"),stop=new Button("停止"),retry=new Button("再試行");
     private final TitledPane settings=new TitledPane();
     private final Timeline nativeSync;
     private final EngineSetupPane engineSetup;
+    private final PerformancePane performance;
     private Settings loaded;
     private double normalX,normalY,normalWidth,normalHeight;
     public MainController(Stage stage, java.util.function.Consumer<String> openUri) {
@@ -29,9 +31,13 @@ public final class MainController implements AutoCloseable {
         String loadError="";
         try { loaded=store.load(); } catch (IOException e) {loaded=Settings.defaults();loadError="設定を読み込めませんでした。初期設定で起動します。";}
         name.setText(loaded.receiverName());executable.setText(loaded.executable());onTop.setSelected(loaded.onTop());audio.setSelected(loaded.audio());autoStart.setSelected(loaded.autoStart());logging.setSelected(loaded.logging());
+        requestedFps.getItems().setAll(30,60);requestedFps.setValue(loaded.requestedFps());
         log.setEnabled(loaded.logging());
         engineSetup=new EngineSetupPane(stage,executable::getText,value->{executable.setText(value);return save();},openUri);
         engineSetup.setExpanded(loaded.executable().isBlank());
+        performance=new PerformancePane(stage,airplay,windows);
+        performance.setRunningListener(running -> onTop.setDisable(running));
+        airplay.setMetricsListener(performance::accept);
         Label title=new Label("MirrorDock");title.getStyleClass().add("title");
         Label subtitle=new Label("iPhone の画面を、この PC へ。");
         message.setWrapText(true);feedback.setWrapText(true);
@@ -44,11 +50,13 @@ public final class MainController implements AutoCloseable {
         });
         HBox path=new HBox(8,executable,choose);HBox.setHgrow(executable,Priority.ALWAYS);
         Button save=new Button("設定を保存");save.setOnAction(e -> save());
-        VBox config=new VBox(12,new Label("受信機名（変更は次の受信開始時に反映）"),name,new Label("UxPlay 実行ファイル（信頼できる uxplay.exe のみ）"),path,autoStart,logging,save);
+        VBox config=new VBox(12,new Label("受信機名（変更は次の受信開始時に反映）"),name,new Label("UxPlay 実行ファイル（信頼できる uxplay.exe のみ）"),path,
+                new Label("フレームレート上限（次回の受信開始時に反映）"),requestedFps,
+                new Label("30／60fpsは送信上限の案内です。実際のFPSは性能診断で確認してください。"),autoStart,logging,save);
         settings.setText("設定");settings.setContent(config);settings.setExpanded(loaded.executable().isBlank());
         Button help=new Button("接続できないとき");help.setOnAction(e -> new Alert(Alert.AlertType.INFORMATION,"PCとiPhoneを同じLANに接続してください。有線LANとWi-Fiの組合せも利用できます。\n\nゲストWi-Fi・AP隔離・VPN、Windowsのプライベートネットワーク設定、UxPlayのファイアウォール許可、mDNS（UDP 5353）を確認してください。Bonjour方式ではBonjourサービスも確認します。\n\nDLL不足・映像エラー：「受信エンジンを診断」を実行し、エンジンZIPを一式再導入してください。手動MSYS2版では同一UCRT64環境を確認してください。音声エラーでは音声をOFFにして受信を再開してください。\n\n原因を特定できない場合はINSTALL.mdの診断手順を参照してください。ファイアウォールは自動変更しません。",ButtonType.OK).show());
         Label video=new Label("映像は UxPlay の別ウィンドウに表示されます。\nウィンドウは自由にサイズ変更できます。\nWindows の映像全画面切替：映像ウィンドウで Alt + Enter");video.setWrapText(true);
-        VBox content=new VBox(18,title,subtitle,status,message,new HBox(10,start,stop,retry),instruction,video,new HBox(18,onTop,audio),engineSetup,settings,help,feedback);
+        VBox content=new VBox(18,title,subtitle,status,message,new HBox(10,start,stop,retry),instruction,video,new HBox(18,onTop,audio),performance,engineSetup,settings,help,feedback);
         content.setPadding(new Insets(28));content.setFillWidth(true);
         ScrollPane scroll=new ScrollPane(content);scroll.setFitToWidth(true);
         Scene scene=new Scene(scroll,900,660);scene.getStylesheets().add(getClass().getResource("/theme.css").toExternalForm());
@@ -59,6 +67,7 @@ public final class MainController implements AutoCloseable {
         start.setOnAction(e -> begin());retry.setOnAction(e -> {airplay.stop();begin();});stop.setOnAction(e -> airplay.stop());
         onTop.setOnAction(e -> {stage.setAlwaysOnTop(onTop.isSelected());save();});
         audio.setOnAction(e -> {save();feedback.setText("音声設定は次の受信開始時に反映します。音声OFFでも映像は受信します。");});
+        requestedFps.setOnAction(e -> {if(save())feedback.setText("フレームレート上限は次の受信開始時に反映します。受信中のFPS設定は変わりません。");});
         stop.setDisable(true);retry.setVisible(false);
         airplay.setListener(event -> Platform.runLater(() -> {
             status.setText(switch(event.state()){case STOPPED->"停止中";case STARTING->"起動中";case WAITING->"接続待機中";case CONNECTED->"接続中";case ERROR->"エラー";});
@@ -66,6 +75,7 @@ public final class MainController implements AutoCloseable {
             boolean busy=event.state()!=AirPlayService.State.STOPPED && event.state()!=AirPlayService.State.ERROR;
             start.setDisable(busy);stop.setDisable(!busy);retry.setVisible(event.state()==AirPlayService.State.ERROR);
             engineSetup.setReceiving(busy);
+            performance.setEngineState(event.state());
             if(event.state()==AirPlayService.State.ERROR) engineSetup.setExpanded(true);
             name.setDisable(busy);executable.setDisable(busy);choose.setDisable(busy);
             if(event.state()==AirPlayService.State.CONNECTED) settings.setExpanded(false);
@@ -76,7 +86,7 @@ public final class MainController implements AutoCloseable {
         }));nativeSync.setCycleCount(Animation.INDEFINITE);
         if(!loadError.isEmpty()) feedback.setText(loadError);
     }
-    private Settings snapshot() {return new Settings(name.getText(),executable.getText(),onTop.isSelected(),audio.isSelected(),autoStart.isSelected(),logging.isSelected(),normalX,normalY,normalWidth,normalHeight);}
+    private Settings snapshot() {return new Settings(name.getText(),executable.getText(),onTop.isSelected(),audio.isSelected(),autoStart.isSelected(),logging.isSelected(),normalX,normalY,normalWidth,normalHeight,requestedFps.getValue()==null?30:requestedFps.getValue());}
     private boolean save() {
         if (!snapshot().receiverName().equals(name.getText())) {feedback.setText("受信機名は1〜80文字で入力してください（制御文字は使用できません）。");return false;}
         try {store.save(snapshot());log.setEnabled(logging.isSelected());feedback.setText("設定を保存しました。");return true;}
@@ -91,5 +101,5 @@ public final class MainController implements AutoCloseable {
                 System.out.println("GUI_SMOKE_OK: stage visible; missing-engine error displayed");Platform.exit();
             });exit.play();
         }}
-    public void close(){nativeSync.stop();engineSetup.close();save();airplay.close();}
+    public void close(){nativeSync.stop();performance.close();engineSetup.close();save();airplay.close();}
 }

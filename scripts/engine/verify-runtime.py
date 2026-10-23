@@ -30,10 +30,15 @@ with tempfile.TemporaryDirectory(prefix='mirrordock-engine-check-') as temp:
             raise RuntimeError(f'{Path(command[0]).name} exited {result.returncode}: {result.stdout}\n{result.stderr}')
         return result.stdout
     help_text=run([str(root/'bin/uxplay.exe'),'-h'])
-    for option in ('-n name','-nh','-as','-d '):
+    for option in ('-n name','-nh','-as','-d ', '-fps n'):
         if option not in help_text:raise RuntimeError(f'UxPlay help is missing expected option {option}')
+    if 'MirrorDock performance diagnostics protocol: MDPERF1 (opt-in)' not in help_text:
+        raise RuntimeError('Packaged engine is missing the opt-in diagnostics patch')
+    manifest=json.loads((root/'share/mirrordock/MIRRORDOCK_PERFORMANCE_PATCH.json').read_text(encoding='utf-8'))
+    if manifest.get('protocol') != 'MDPERF1' or manifest.get('media_payload_recording') is not False:
+        raise RuntimeError('Invalid packaged diagnostics provenance')
     for element in ELEMENTS:
         output=run([str(root/'bin/gst-inspect-1.0.exe'),element])
         if 'Plugin Details:' not in output or 'Filename' not in output:
             raise RuntimeError(f'Unexpected gst-inspect result for {element}')
-    print(json.dumps({'uxplay_help':'passed','gstreamer_elements':list(ELEMENTS),'real_iphone_test':'not_performed'}))
+    print(json.dumps({'uxplay_help':'passed','metrics_protocol':'MDPERF1','gstreamer_elements':list(ELEMENTS),'real_iphone_test':'not_performed'}))

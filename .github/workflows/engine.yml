@@ -52,7 +52,19 @@ jobs:
           git -C out/UxPlay fetch --depth=1 https://github.com/FDH2/UxPlay.git f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
           git -C out/UxPlay checkout --detach FETCH_HEAD
           test "$(git -C out/UxPlay rev-parse HEAD)" = f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967
-      - name: Build fixed upstream UxPlay
+      - name: Apply opt-in performance diagnostics to pinned source
+        id: patch_metrics
+        run: python scripts/engine/apply_metrics_patch.py --source out/UxPlay
+      - name: Test native diagnostics with synthetic video
+        id: native_tests
+        env:
+          MD_PERF_REQUIRE_H264_TEST: '1'
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -DMD_PERF_TESTING -Wall -Wextra -Werror scripts/engine/native/md_performance.c scripts/engine/native/test_md_performance.c \
+            $(pkg-config --cflags --libs gstreamer-1.0 gstreamer-video-1.0 gstreamer-app-1.0 glib-2.0) -o out/test-md-performance.exe
+          ./out/test-md-performance.exe
+      - name: Build pinned UxPlay with opt-in diagnostics
         id: build_engine
         run: |
           set -euo pipefail
@@ -111,6 +123,8 @@ jobs:
         env:
           MD_TESTS: ${{ steps.packaging_tests.outcome }}
           MD_FETCH: ${{ steps.fetch_upstream.outcome }}
+          MD_PATCH: ${{ steps.patch_metrics.outcome }}
+          MD_NATIVE: ${{ steps.native_tests.outcome }}
           MD_BUILD: ${{ steps.build_engine.outcome }}
           MD_DEPENDENCIES: ${{ steps.collect_dependencies.outcome }}
           MD_SOURCES: ${{ steps.collect_sources.outcome }}
@@ -125,6 +139,8 @@ jobs:
             '| --- | --- |',
             "| Python packaging tests | $env:MD_TESTS |",
             "| Fetch exact upstream revision | $env:MD_FETCH |",
+            "| Apply exact-source diagnostics patch | $env:MD_PATCH |",
+            "| Native synthetic-video diagnostics tests | $env:MD_NATIVE |",
             "| UxPlay Windows build | $env:MD_BUILD |",
             "| DLL dependency closure | $env:MD_DEPENDENCIES |",
             "| Corresponding sources and licenses | $env:MD_SOURCES |",

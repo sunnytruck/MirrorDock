@@ -1,189 +1,157 @@
-# Windowsミラーリング映像のフレーム落ち調査
+# 30／60fps設定とGUI性能診断
 
-2026-10-22時点の調査。**原因は未特定で、改善効果の実機計測はまだ行っていません。** 今回は既定のFPS・解像度・同期・デコーダー・描画・バッファ設定を維持し、調査結果と計測手順だけを追加します。
+2026-10-23更新。目標は安定した60fpsと低遅延ですが、**Windows・iPhone実機での性能計測、原因の特定、改善効果の確認は未実施です。** 60fpsの上限設定と、原因を調べるためのGUI診断を追加しました。解像度・画質・メディア同期・デコーダー選択・バッファの既定値は変更していません。
 
-利用者から、WindowsでiPhoneの映像・音声を受信できたこと、ときどきミラー映像だけが滑らかでなくなることの報告がありました。申告環境はCore i5-14400F、GeForce RTX 4060 Ti、280Hzモニターです。エンジンは導入済みですが、選択中の配布版・実デコーダー・実送信FPSはまだ照合していません。この報告を、開発環境での実機測定や全環境の動作保証とは扱いません。
+利用者から、WindowsでiPhoneの映像・音声を受信できたこと、ときどきミラー映像だけが滑らかでなくなることの報告があります。申告環境はCore i5-14400F、GeForce RTX 4060 Ti、280Hzモニターです。この報告を、開発環境での実機測定や全環境の動作保証とは扱いません。
 
-## 1. 現在の処理と設定
+## 1. 新しいアプリと診断対応エンジン
 
-調査対象はMirrorDock `980a54f`以降の同一実装、配布定義のUxPlay `f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967`、GStreamer 1.28.8です。別の実行ファイルを指定している場合は、その版で再確認が必要です。
+30／60fpsの切替はUxPlay公式の`-fps 30`／`-fps 60`を使用します。旧設定は30fpsを維持し、不正な保存値も30へ戻します。**この値はiPhoneへ案内する送信上限で、実際の受信FPSとは別です。** 60を指定しても送信60fpsを強制・保証しません。
 
-通常のH.264画面ミラーリング経路は次のとおりです。JavaFXは映像フレームを処理せず、UxPlayの別ウィンドウを操作します。
+GUI性能診断には、MirrorDock側の`MDPERF1`計測拡張を含む新しいWindowsエンジンが必要です。上流の固定コミットは引き続き`f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967`で、MirrorDockがそのソースへ計測用パッチを適用してビルドします。診断は親アプリと子エンジンの標準入力パイプで明示的に開始・停止し、外部サーバーへ情報を送りません。
+
+**以前のRun #8のエンジンは`MDPERF1`非対応です。** 通常の映像・音声受信やFPS上限の指定に引き続き使用できますが、自動計測値は「計測不可」です。性能診断を使う場合は、[Experimental Windows engine](https://github.com/sunnytruck/MirrorDock/actions/workflows/engine.yml)から今回の変更を含む成功した実行を選び、新しい`MirrorDock-Engine-Windows.zip`をGUIから再導入してください。既存の導入ファイルは保持されます。新しいCIの成功・Artifacts公開と、実機の受信・性能検証は区別します。
+
+診断OFF時には、計測専用のフレームprobe・Present通知・サンプリングtimerを動作させません。計測対応エンジンの制御readerは入力待ちになります。通常の診断ではPresent通知を有効化せず、その項目は「計測不可」です。追加チェックの「Present詳細計測」は既定OFFで、選んだ診断中だけ有効にし、終了時は元のproperty値へ戻します。診断ON時の負荷と、OFF時の実機での性能差は今後の確認対象です。
+
+**Present詳細計測は観測によって描画経路を変えます。** GStreamerの`emit-present=true`では毎フレームの`ClearRenderTargetView`や`Present1`のdirty rectangle最適化の条件が変わるため、通常診断と同じ負荷とは扱いません。まず詳細OFFで30／60fps・ウィンドウ制御を比較し、必要な場合だけ詳細ONを別条件として測定します。診断全体がOFFのときの見た目とも比較してください。追加の計測による引っかかりを元の不具合と混同しないことが必要です。
+
+## 2. GUIで30fpsと60fpsを比較する
+
+1. 「受信エンジンの導入・診断」から診断対応エンジンZIPを導入します。「受信エンジンを診断」は従来どおりヘルプ起動・DLL・Firewallの確認で、性能計測の開始ボタンとは別です。
+2. 「設定」の「フレームレート上限」で30または60を選びます。変更は保存され、**次回の受信開始時**に反映します。受信中に選び直しても、その接続の設定や実FPSを途中で変更しません。
+3. 「受信開始」でiPhoneを接続し、映像が安定してから「性能診断・30／60fpsの比較」を開きます。「受信中の設定上限」が今回試す30／60と一致することを確認します。
+4. 診断中のウィンドウ制御方式を選び、「Present詳細計測」はOFFのまま「性能診断を開始」を押します。受信は継続し、約60秒で自動停止します。「性能診断を停止」で途中停止もできます。受信停止・切断・アプリ終了でも計測を終了します。
+5. 同じ非DRMコンテンツ／一定のスクロール操作で再現します。静止画だけでFPSを比較せず、ウィンドウのサイズ・位置、表示モニター、音声ON/OFF、ネットワーク、診断時間を揃えます。
+6. 終了後、選択式の「音ズレ」「カクつき」「体感遅延」を必要に応じて入力し、「診断結果を保存…」からJSONを保存します。これは手動観察であり、数値のA/Vずれや端末間遅延を自動測定した値ではありません。
+7. 受信を止め、30／60のもう一方を選んで再び受信開始し、同じ条件・同じ制御方式で診断します。30へ戻す場合も同じ操作です。
+
+パネルには設定上限ごとの直近の終了結果を比較表示します。この比較表示は現在のアプリ内だけに保持し、保存は現在の完了診断1件ずつです。複数条件を残す場合は、各診断を別のJSONへ保存してください。音ズレ・遅延の主観評価も、各条件の診断後に選び直します。
+
+Present直前の通知間隔が必要な場合は、同じ条件で「Present詳細計測」をONにした診断を追加します。詳細OFFの結果と分けて保存し、JSONの`detailed_present_enabled`で区別してください。30fpsと60fpsの比較では、このON/OFFも揃えます。
+
+Windowsの「ディスプレイの詳細設定」で実設定Hzを、Windows／NVIDIAの該当設定でVRR状態を確認してください。定格280Hzと現在設定が同じとは限りません。固定280Hzでは280÷30も280÷60も整数でないため、欠落なしでも表示間隔が不均一になり得ます。モニターHzの比較は任意の手動試験とし、30／60の比較と同時に変更しません。アプリは表示HzやVRR設定を変更しません。
+
+## 3. 計測値の定義と限界
+
+新エンジンは、短時間の診断中だけparser・decoder・sinkを観測し、追加指定した場合だけPresent通知を観測します。GUIは概ね1秒ごとの最新区間と、比較可能な区間の平均を表示します。未取得・非対応・不正な値は推測で補わず「計測不可」にします。
+
+| 表示 | 計測する位置・値 | 意味と注意 |
+| --- | --- | --- |
+| 受信FPS（解析後AU） | H.264/H.265 parserの出力でAU alignmentを確認した圧縮Access Unit数の差分÷時間 | TCPパケット数やネットワーク線上での純粋な到着FPSではない。parserまでの受信・復号・queue・処理待ちの影響を含む |
+| デコード出力FPS | 実際にバッファを出したvideo decoderの出力数の差分÷時間 | デコード後の出力ペース。デコード処理そのものの所要時間ではない |
+| sink描画FPS | GstBaseSinkの`rendered`差分÷時間 | sinkが処理したフレーム数。物理モニターで表示されたFPSではない |
+| Present直前通知／秒 | `d3d11videosink::present`通知回数の差分÷時間。詳細計測ON時のみ | DXGI呼出前の通知で、再描画を含む場合がある。DXGI Presentの成功数・表示完了数・パネルの実表示FPSではない |
+| sinkドロップ | GstBaseSinkの`dropped`の開始時からの差分 | 同一継続区間のsink側ドロップ。decoderで落ちたフレームを含む総欠落数ではない |
+| 実際のデコーダー | 実際に出力が確認できたdecoderの許可されたfactory識別子 | factory生成を試みたログ名だけで選んだ推測値ではない。未取得・対応外識別子は計測不可 |
+| 受信／デコード／Present間隔 P95・最大 | 各観測地点の単調時計による処理間隔 | P95は直近最大512間隔の窓、最大は同一継続区間の値。端末間遅延や純粋なWi-Fi遅延ではない |
+| 実画面の表示FPS | 計測不可 | DWM・VRR・物理モニターの表示結果をこの診断だけでは取得しない |
+| decoder側のドロップ総数 | 計測不可 | sink dropへ合算・推定しない |
+| TCP再送・数値のネットワーク遅延 | 計測不可 | parser出力間隔から再送数や遅延を推定しない |
+| 数値の音ズレ・端末間表示遅延 | 計測不可 | 選択式の手動観察と区別する |
+
+pipelineの再生状態変更等でカウンターが戻った場合は継続区間を区別し、比較不能な差分を平均へ混ぜません。初回のpipeline検出も区間変更に含まれるため、区間変更だけで再生失敗と判断しません。P95・最大・sinkドロップも新しい区間の値になるため、切断やresetを含む結果を一つの連続した60秒の総計として扱わないでください。異なる段階のprocessed/dropを単純加算すると重複計上するため、段階別に読みます。
+
+PLAYINGからの状態変更やflushを検出すると、その診断を途中終了します。1秒のサンプル間にリセットして再開する場合も、境界の値を無効化して混在を避けます。受信自体は停止しません。映像が再び安定してから、必要に応じて新しい診断を開始してください。
+
+`stats.average-rate`はそのまま描画FPSに採用せず、`rendered`差分と経過時間から算出します。`gst-inspect-1.0`を別に実行しても、稼働中のUxPlay内部のsink統計は取得できません。
+
+## 4. 毎秒のSetWindowPosを比較する
+
+診断パネルでは次の方式を選べます。選択は次の性能診断中だけ適用し、診断終了時に元の方式へ戻します。比較条件を揃えるため、診断中は最前面設定の操作を止めます。
+
+| 方式 | 動作 | 比較時の注意 |
+| --- | --- | --- |
+| 状態変更時のみ（`ON_CHANGE`） | 通常の既定方式。PID・対象ウィンドウ・最前面の要求／実状態等が変わった場合に適用 | 対象の列挙は続けるが、状態が同じときの`SetWindowPos`再適用を抑制する |
+| 毎秒再適用・従来方式（`PERIODIC`） | 従来どおり1秒周期で最前面状態を再適用する | 最前面OFFでも`HWND_NOTOPMOST`を繰り返す経路を比較できる |
+| 診断中のウィンドウ制御を停止（`SUSPENDED`） | 診断中は映像ウィンドウの列挙・最前面再適用を停止する | 停止時点の最前面状態を保持する。最前面を自動解除する操作ではない |
+
+最初はPresent詳細OFFで、30fps・同じ音声・同じサイズで3方式を各約60秒ずつ比較し、その後60fpsでも比較します。各結果を保存し、sink drop、受信・デコードの間隔、手動観察を照合します。Present間隔を加える場合は詳細ONの別試験にします。計測負荷、内容の違い、切断・resetも確認してください。差が出ても、その一回だけで毎秒のウィンドウ操作が原因と断定しません。
+
+`ON_CHANGE`への変更は画質や同期・バッファを直接変えませんが、再接続・新しいウィンドウ・全画面時の最前面復元はWindows実機での回帰確認が必要です。現時点でこの変更によってカクつきが改善したとは報告しません。
+
+## 5. ネットワーク・デコード・描画の切り分け
+
+通常のH.264画面ミラーリング経路は次のとおりです。JavaFXは映像フレームを処理しません。
 
 ```text
 iPhone送出 → TCP受信・復号 → appsrc → queue → h264parse
  → decodebin → videoconvert → videoscale → d3d11videosink → DXGI/DWM/モニター
 ```
 
-| 項目 | コード・公式実装で確認した内容 | 計測上の意味 |
+| 同じ時刻に比較する観測 | 次に調べる範囲 | この診断だけでは分からないこと |
 | --- | --- | --- |
-| MirrorDockの引数 | `-n <受信機名> -nh -d 1 -as autoaudiosink -vs d3d11videosink`。音声OFF時は`-as 0` | FPS・解像度・decoder・QoS・lateness・バッファ値はアプリ側で指定していない |
-| 送信上限の案内 | UxPlay既定の`maxFPS=30`、表示広告は1920×1080・refreshRate=60 | 実FPSはiPhoneが決める。広告の60と実送信60fpsは別 |
-| 280Hzとの関係 | 280÷30は約9.33、280÷60も約4.67で整数ではない | 固定リフレッシュ表示では、欠落がなくても表示間隔が不均一になり得る。VRR・DWM・実FPSの影響もあり、今回の原因とはまだ断定できない |
-| メディア同期 | UxPlayは既定で`video_sync=true`。NTPから変換したPTSと`sink sync=true`を使用 | 同期時刻に間に合わないフレームを落とす経路がある |
-| 描画 | Windowsでは`d3d11videosink`を明示指定 | Direct3D描画の指定であり、GPUデコードを保証しない |
-| デコード | `decodebin`が選択。配布物は`libav`と`d3d11`を含む | `avdec_h264`か`d3d11h264dec`かを実動作で確認する。どちらを使用中とも未確定 |
-| GPUデコーダーの候補 | GStreamerは対応GPUで`d3d11h264dec`を`avdec_h264`より高いrankで登録し得る | GPUデコーダーが存在しないと決めつけない。生成を試みたfactory名だけでも選択確定にならない |
-| CPU/GPU間転送 | system-memory入力の場合、d3d11 sink側でコピー・GPUアップロードが発生する | `Video Decode`・`3D`・`Copy`とCPUを別々に観察する |
-| queue | UxPlayは通常の`queue`を挿入。GStreamer既定は200 buffers／10MiB／1秒の先に達する上限、`leaky=no` | 「常に1秒遅延する」設定ではない。満杯なら通常はブロックし、上流側にも滞留し得る |
-| appsrc | `is-live=true`、時間形式とcapsを設定。アプリ側ではqueue上限やleakyを追加指定しない | queueだけの調整で、受信から描画までの滞留を解決できるとは限らない |
-| 現在の診断とログ | GUI診断は`-h`とFirewall確認。`MirrorDock.log`は時刻と状態名のみ | 稼働中のFPS・QoS・drop・PTS・選択デコーダーはGUIにも状態ログにも保存されない |
-| 外部環境設定 | 子プロセスは親の環境変数を継承。`GST_DEBUG`・`GST_TRACERS`・`GST_PLUGIN_FEATURE_RANK`等は残る | 全環境を公開せず、関係する変数だけ設定の有無を確認する |
+| 受信AUの間隔が乱れ、decoderやsinkのペースも落ちる | 送信側、TCP受信、復号、parserまでの処理待ち | parser出力は線上の到着ではない。ネットワークと受信threadのスケジューリングは区別できない |
+| 受信AUは安定し、decoder出力が遅れる | decoder、処理待ち、caps変換・CPU/GPU間転送 | 出力間隔だけでは処理時間・CPU/GPU負荷やQoSの根因までは確定できない |
+| decoder出力は安定し、sink dropやPresent間隔の乱れが増える | sink、GPU、DWM、ドライバー、ウィンドウ制御 | Present通知は表示完了ではなく、sink QoSだけでは描画側が根因と確定できない |
+| 各段階のペースは安定し、sink dropが増えないが見た目が不均一 | 実送信FPS、モニターHz、DWM／VRR、未計測の段階 | decoder側dropや物理表示を取得していないため「全欠落なし」とは断定できない |
 
-根拠：ローカルの[起動処理](../src/main/java/jp/mirrordock/UxPlayService.java)、[子プロセス環境](../src/main/java/jp/mirrordock/EngineEnvironment.java)、[配布プラグイン](../scripts/engine/bundle.py)、[ログ保存](../src/main/java/jp/mirrordock/LogService.java)、UxPlayの[既定広告値](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/lib/raop.c#L620)、[映像pipeline](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/renderers/video_renderer.c#L384)、[PTS処理](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/renderers/video_renderer.c#L642)。
+保存JSONの`series`には、経過時間・計測区間と段階別カウンター／区間FPSなどを概ね1秒ごと、直近最大64件まで記録します。平均値だけでなく、受信・デコード・sinkのペースが落ちた時刻が対応しているかを照合してください。カクつきを感じた診断経過秒も手元で確認すると比較しやすくなりますが、自由記述のメモや画面の記録はアプリの保存対象に含めません。この時間分解能で短い停止や通信の原因をすべて捕捉するものではありません。
 
-## 2. d3d11videosinkとフレームドロップ
+映像はTCPで受信し、このpipelineに`rtpjitterbuffer`はありません。UDP/RTP用のjitterbuffer設定をそのまま適用しません。TCPでは再送・順序待ちにより、平均帯域に余裕があっても到着が詰まる可能性があります。音声は別経路なので、音声が滑らかでも映像の通信・デコード・描画を除外できません。live queueが一時的に空になること自体は正常にも起こります。
 
-GStreamer 1.28.8では、d3d11 sinkが継承する`GstVideoSink`が初期化時に次を設定します。一般的な`GstBaseSink`だけの既定値を転用すると説明が変わる点に注意してください。
+最初はGUI数値と手動観察を使い、不足する場合はタスクマネージャーの論理CPU、GPUの`Video Decode`・`3D`・`Copy`を別々に観察します。1秒程度の更新では短いスパイクを見逃すため、正常に見えても原因を除外しません。さらに必要なら、MicrosoftのWPR/WPA・GPUViewでCPU・GPU・DWMのイベントを同じ時刻軸で調べる方法があります。GPUViewはADKの選択機能Windows Performance Toolkitに付属し、公式の`Log.cmd`での記録は管理者端末を必要とします。MirrorDock本体の常時管理者実行は不要です。
 
-| 設定 | GstVideoSinkの初期値 | 意味・注意 |
+Windowsの`GetTcpStatistics`やPC全体のTCP送信再送数は全アプリ合算です。PC側の送信再送数だけでは、iPhone→PC映像の送信側再送を観測・除外できません。増加だけでも、増加しないことだけでも、映像のネットワーク原因を判定しません。
+
+## 6. 保存する情報と保存しない情報
+
+「診断結果を保存…」は、明示的に選んだファイルへ完了した診断のJSONを保存します。自動保存・自動アップロードはしません。
+
+保存対象は固定した項目だけです。
+
+- 設定上限30／60、診断時間、完了理由、音声ON/OFF、ウィンドウ制御方式、Present詳細ON/OFF。
+- 取得できた段階別FPS・sink drop・間隔のP95／最大、サンプル数、reset有無、許可したdecoder識別子。
+- 概ね1秒ごとの数値の時系列を直近最大64件。診断開始からの相対経過時間、エンジンの計測経過時間・区間、段階別カウンター・区間指標。
+- 選択式の音ズレ・カクつき・体感遅延の手動観察、計測値の定義。取れない項目は「計測不可」。
+
+映像・音声・暗号鍵・端末名・アドレス・実行パス・環境変数一覧・生のUxPlay/GStreamer出力は保存しません。手動観察も自由入力ではなく固定した選択値です。状態ログの`MirrorDock.log`は従来どおり時刻と状態だけで、性能診断JSONとは別です。
+
+旧エンジンや未対応の観測地点では、60秒の診断枠・比較条件・手動観察を保存できますが、自動値を仮の数で埋めません。「計測不可」はゼロでも不具合の証明でもありません。
+
+## 7. 維持した設定と、今後の改善候補
+
+今回追加したのは30／60上限の切替、明示的な短時間計測、ウィンドウ制御の比較です。メディア同期を無効化したり、解像度・画質を下げたり、バッファを大きくする変更はしていません。
+
+| 設定・候補 | 現在の扱い | 副作用・評価点 |
 | --- | --- | --- |
-| `max-lateness` | 5,000,000ns（5ms） | フレームの終端時刻／duration等を加味する遅着判定の許容値。「全フレームが生成から5msで落ちる」という意味ではない |
-| `processing-deadline` | 15,000,000ns（15ms） | live pipelineの処理予算としてlatency計算に加わる値。実デコード時間の測定値ではない |
-| `qos` | `true` | downstreamの遅延をupstreamへ知らせる。decoder側の追い付き処理にも影響する |
-| `sync` | UxPlayが`true`を指定 | GStreamerのメディア時計への同期。Windowsモニターの垂直同期／280Hz設定とは同じ設定ではない |
-| `adapter` | `-1` | 既定のGPU選択。実際のadapter・GPUデコード利用は未計測 |
-| `force-aspect-ratio` | `true` | アスペクト比維持 |
+| `-fps 30`／`-fps 60` | GUIで切替、次回受信開始時に適用。既定30 | 実送信FPSを強制しない。60は帯域・デコード・GPU負荷を増やし得る |
+| 変更時だけのウィンドウ制御 | 通常は`ON_CHANGE`、診断中に他方式と比較可能 | Windowsの再接続・ウィンドウ再生成・全画面で回帰確認が必要 |
+| decoder／converter・GPU adapter固定 | 未変更。`decodebin`等の既定を維持 | 互換性、色、回転、コピー経路が変わるため実デコーダー確認後に評価する |
+| `max-lateness`緩和 | 未変更 | 古いフレームを表示する許容が増え、遅延へ影響する。無制限化を初手にしない |
+| queueの拡大／縮小・leaky化 | 未変更 | 拡大は滞留・メモリー増、縮小やdropは欠落・圧縮フレームの依存関係へ影響し得る |
+| `-vsync no`／QoS無効化 | 未変更 | A/V同期・ペーシング・追い付き処理が変わり、映像の遅れが蓄積し得る |
+| 表示Hz／別sink | 任意の手動比較。アプリは変更しない | デスクトップや表示経路も変わる。D3D12等は現配布に含まれず単純置換できない |
+| 解像度・画質低下 | 未変更 | 明確な画質低下を伴うため、実測による根拠と利用者が許容する条件が必要 |
 
-BaseSinkは、同期時計・有効PTS・duration等を使って遅着を判定し、条件に合えば`buffer late, dropping`とQoS情報を出します。decoderもdownstream QoSに応じてフレームを落とし、libavには期限超過時に非参照フレームを省く追い付き処理があります。**sinkのdropだけを数えても、decoderで落ちたフレームを含む全欠落数にはなりません。**
+GStreamer 1.28.8のd3d11 sinkが継承する`GstVideoSink`は`max-lateness=5ms`、`processing-deadline=15ms`、`qos=true`を初期化します。UxPlayは`sink sync=true`とNTPから変換したPTSを使用します。5msはフレーム終端時刻／duration等を加味する遅着許容値で、「生成から5msで落ちる」という意味ではありません。GStreamer時計同期とWindowsモニターの垂直同期は同じ設定ではありません。
 
-QoSの遅延値は送信・ネットワーク・時刻同期・デコード・スケジューリング・描画の影響を受けます。QoS発生だけで「Wi-Fiが原因」「GPUが遅い」とは判定できません。
+sinkとdecoderは別々のQoS/drop経路を持ち、CPUデコード後にGPUへコピーする場合もあります。`d3d11videosink`の指定だけでGPUデコードやzero-copyを保証しません。現配布のd3d11 pluginには対応GPU向けdecoderがあり得ますが、実際の出力を観測するまで使用中と断定しません。
 
-根拠：[GstVideoSink初期化](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.c#L169)、[BaseSink遅着判定](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gstreamer/libs/gst/base/gstbasesink.c#L3095)、[decoderのQoS処理](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodecoder.c#L3707)、[libavの追い付き処理](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-libav/ext/libav/gstavviddec.c#L1860)、[D3D11のコピー経路](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-bad/sys/d3d11/gstd3d11videosink.cpp#L1683)。
+## 8. 開発者向けの注意と未確認事項
 
-## 3. 最初の実機確認：設定を変えない
-
-1. 設定画面の`uxplay.exe`の場所を確認する。配布版なら`bin`の親の`mirrordock-engine.properties`と`packages.tsv`で上流commit・GStreamer版を照合する。Run番号はダウンロード元で確認する。
-2. Windowsの「ディスプレイの詳細設定」で利用中モニターの実設定Hzを、Windows／NVIDIAの該当設定でVRRの状態を確認する。モニターの定格280Hzと現在設定が同じとは限らない。そのうえで、同じ非DRMコンテンツ／一定のスクロール操作を60秒再現する。静止画だけではFPSを比較できない。ウィンドウサイズ・位置・表示モニター・音声・ネットワーク条件を固定する。
-3. 引っかかった時刻と、音声も同時に途切れたか、約1秒周期か、ウィンドウ操作／回転直後かを記録する。画面・音声の録画は診断の必須条件にしない。
-4. タスクマネージャーでCPU全体だけでなく論理プロセッサ単位、GPUの`Video Decode`・`3D`・`Copy`を見る。全体CPU使用率や3Dグラフだけでデコード負荷を判断しない。1秒程度のサンプリングでは短いスパイクを見逃すため、正常に見えても原因を除外しない。
-5. 次節のログ付き試験と、ログなしの基準試験を比較する。**まだ`-fps 60`、`-vsync no`、解像度低下、バッファ拡大、GPU固定は行わない。**
-
-共有する初期情報は、版、実行条件、引っかかった時刻、音声との同時発生、CPU/GPUの観察結果で足ります。生の環境変数一覧やUxPlay全文ログの公開は不要です。
-
-## 4. 通常のGUI経路のまま、一時的にGStreamerログを取る
-
-現在の「状態ログを保存」では性能診断ログは取れません。以下は利用者が必要時に行う診断例です。**Windowsでの手順自体は未実行です。** 既定の映像パラメーターを維持し、起動するMirrorDockとその子UxPlayへ、プロセス単位でGStreamer診断環境を渡します。恒久的な環境変数変更は行いません。
-
-MirrorDockを終了してからWindows PowerShellを開き、`$app`を実際のMirrorDock.exeのパスへ置き換えます。
-
-```powershell
-$app = 'C:\実際のインストール先\MirrorDock.exe'
-if (-not (Test-Path -LiteralPath $app -PathType Leaf)) {
-    throw 'MirrorDock.exeの実際のパスを指定してください。'
-}
-$logPattern = Join-Path $env:TEMP ('MirrorDock-GStreamer-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-%p.log')
-$names = @('GST_DEBUG', 'GST_DEBUG_FILE', 'GST_DEBUG_NO_COLOR')
-$previous = @{}
-foreach ($name in $names) {
-    $previous[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
-}
-try {
-    $env:GST_DEBUG = '2,GST_ELEMENT_FACTORY:4,d3d11*:4'
-    $env:GST_DEBUG_FILE = $logPattern
-    $env:GST_DEBUG_NO_COLOR = '1'
-    Start-Process -FilePath $app -Wait
-}
-finally {
-    foreach ($name in $names) {
-        [Environment]::SetEnvironmentVariable($name, $previous[$name], 'Process')
-    }
-    Write-Host ('診断ログ（%pはプロセスID）: ' + $logPattern)
-}
-```
-
-GUIで受信を開始し、基準と同じ操作を60秒行って、受信停止・アプリ終了します。GStreamerが`%p`をプロセスIDへ置き換え、UxPlayとplugin-scannerのファイルを分離します。タスクマネージャーの詳細で`uxplay.exe`のPIDを確認し、そのファイルを対象にします。これは起動情報・警告を調べる比較的低負荷のprofileです。factoryの生成を試みた記録だけでは、最終的に使われたdecoderを確定できません。
-
-それで不足する場合だけ、同じ手順の`GST_DEBUG`の値を次へ置き換えて**10〜15秒程度**の詳細試験を行います。
-
-```text
-2,decodebin:5,GST_PADS:5,GST_CAPS:5,basesink:5,videodecoder:5,libav:5,queue:5,d3d11*:5,GST_QOS:5
-```
-
-- 成功したpad接続、caps交渉、継続して処理するchainを突合し、実デコーダーとメモリー形式を調べます。候補生成やcapsの候補一覧だけでは確定しません。
-- 映像sink名`d3d11videosink_h264`等に対応する`buffer late, dropping`、`qos: rendered ... dropped ...`、decoder側の`Dropping frame due to QoS`、libavの`QOS: hurry up`を時刻付きで調べます。音声sinkのQoSとは区別します。
-- ログファイルはGStreamerのメタデータ診断用です。映像・音声の保存オプションは追加しません。パス・caps・端末に関連する情報が含まれる可能性があるため、全文をそのまま公開せず必要部分を確認して共有します。自動送信はしません。
-- 詳細ログはCPU・ディスクI/Oを増やし、症状を誘発し得ます。`GST_DEBUG_FILE`はJavaの標準出力読取への流入を減らしますが、計測負荷をゼロにしません。ログ付きだけで悪化した場合、その結果を通常動作の原因と断定しません。
-- ログが空、必要な記録がない、drop行がない場合は「不明」です。「ドロップ0」や「GPUデコード成功」とは報告しません。
-
-`gst-inspect-1.0 d3d11videosink`等は、同じ配布物・同じplugin検索環境での存在／既定値の確認には使えますが、**稼働中のUxPlay内部のsink統計を読むコマンドではありません。**
-
-## 5. ネットワーク・デコード・描画の切り分け
-
-この版の通常ミラー映像はTCPで、pipelineに`rtpjitterbuffer`はありません。UDP/RTP用のjitterbuffer設定を、そのままAirPlayミラー映像へ適用しません。TCPでは再送や順序待ちにより、平均帯域に余裕があっても映像到着が詰まる可能性があります。
-
-映像と音声は別経路で処理されるため、音声が滑らかなことだけでは、映像の通信・デコード・描画の問題を除外できません。
-
-低遅延のlive pipelineでqueueが短時間空になること自体は正常にも起こります。空／underrunだけでネットワーク異常と判定せず、再現時刻・入力間隔・対象TCP flow・後段処理と合わせます。
-
-| 同じ時刻に比較する観測 | 次に調べる範囲 | その観測だけでは分からないこと |
-| --- | --- | --- |
-| 実映像TCP flowの再送／到着間隔の乱れ、appsrc投入間隔の乱れ、queueの枯渇 | LAN・Wi-Fi・送信側、受信threadのスケジューリング | 全PCのTCP再送カウンターだけではiPhoneのflowと特定できない。到着が遅い理由はネットワークだけではない |
-| 入力が継続しているのにdecoder出力が遅れる、CPUの特定core／Video Decodeが混む | デコーダー、caps変換、CPU/GPUコピー、実行待ち | GPU全体使用率が低くても、短い処理待ちや別engineの負荷は除外できない |
-| decoder出力は安定、sink遅着・GPU Copy/3D・DWM/Present待ちが重なる | 描画、GPU転送、ドライバー、ウィンドウ制御 | sink QoSだけでは描画側が根因と断定できない |
-| 計測上の送出／処理間隔は安定し欠落増加がないが、見た目だけ不均一 | 30fps等の送信上限、280Hzとの表示cadence、DWM/VRR | 現状のログにdrop行がないだけでは、この条件を満たしたことにならない |
-
-短いCPU/GPUの待ち時間は、必要に応じてMicrosoftのWPR/WPA・GPUView等で同じ時刻軸に載せる方法があります。GPUViewはADKの選択機能Windows Performance Toolkitに付属し、公式の`Log.cmd`による記録は管理者端末を必要とします。MirrorDock本体を常時管理者実行するという意味ではありません。まずGUIでの基準観察と限定ログを優先し、追加導入・権限が必要なトレースは後段にします。イベント時刻・待ち時間・flowの情報で調べ、メディアpayload全体の保存を初手にはしません。ETLにもプロセス名・パス・通信情報等が含まれ得るため、そのまま公開しません。
-
-Windowsの`GetTcpStatistics`やPC全体のTCP送信再送数は全アプリ合算です。さらに、PC側の送信再送数だけでは、iPhone→PC映像の送信者側再送を観測・除外できません。増加だけでも、増加しないことだけでも、映像のネットワーク原因を判定しません。
-
-UxPlayの`-d 1`はパケット単位のdebug出力を抑え、映像到着の`now/ntp/latency/ts`行も出しません。引数なしの`-d`で詳細を出す方法はありますが、端末・暗号関連の情報や大量ログが出るため通常の共有手順にはしません。その`latency`もNTP推定や受信threadの待ちを含み、純粋なWi-Fi遅延ではありません。
-
-## 6. MirrorDock固有の比較候補
-
-[MainController](../src/main/java/jp/mirrordock/MainController.java)は1秒間隔で[WindowManager.engineOnTop](../src/main/java/jp/mirrordock/WindowManager.java)を呼び、毎回`EnumWindows`と`SetWindowPos`を行います。**最前面OFFでも`HWND_NOTOPMOST`を毎秒適用するため、チェックをOFFにするだけではこの周期処理を除外できません。** DWM／Presentへ影響しているかは未計測です。
-
-比較は次の順番で行います。
-
-1. GUI経由の基準試験で、引っかかりと約1秒周期の一致を確認する。
-2. 受信停止後MirrorDockを完全終了し、同じ`uxplay.exe`を直接起動する試験と比較する。二重起動しない。
-3. 直接試験でも、受信機名、音声、sink、`-d 1`、空の`UXPLAYRC`、作業ディレクトリ、PATH、plugin/scanner/registry設定、関連する親環境、映像ウィンドウのサイズ・位置・モニターを一致させる。通常のユーザー`.uxplayrc`を読ませない。
-4. GUI有無で差が出ても、直ちに最前面制御が原因とはしない。ウィンドウ操作・Java側ログ処理等を一項目ずつ計装して切り分ける。
-
-現行GUIは受信中の性能計測や、この周期処理だけを停止するスイッチを持ちません。直接起動の条件を揃えられない場合は、比較結果を未確定として扱い、次の診断実装で対応します。
-
-## 7. 改善候補と副作用：現時点では適用しない
-
-| 候補 | 採用前に必要な根拠 | 副作用・評価点 |
-| --- | --- | --- |
-| ウィンドウ状態／対象が変わったときだけ最前面制御 | 周期的な引っかかりとの相関、直接起動との差 | 画質やmedia遅延を直接変えない。再接続・ウィンドウ再生成・全画面時の最前面復元を回帰確認する |
-| `-fps 60` | 実送信が30fps等で、処理落ちとcadence差を区別できた | 上限の案内だけで送信60fpsを保証しない。帯域・デコード・GPU負荷が増え、280Hzとの整数比にもならない |
-| 確認したGPU decoder／converterを選択 | active decoder・caps・コピー経路、GPU能力を確認 | 互換性、色・回転・解像度変更、コピー回数を評価。sinkをGPUにしただけでzero-copyにはならない |
-| `max-lateness`を少量緩和 | 時折の遅着が確認でき、追加遅延を測定できた | 古いフレームを表示するため遅延許容が増える。無制限化を初期対応にしない |
-| queue等の上限調整 | どの段階で溜まる／枯れるかを観測 | 拡大は遅延・メモリー増、縮小／leakyは欠落や圧縮フレーム依存関係への影響がある |
-| `-vsync no`／QoS無効化 | 個別比較で同期処理との因果を確認できた | A/V同期、ペーシング、decoderの追い付き処理が変わる。映像の遅れが蓄積する可能性があり既定にしない |
-| 一時的な表示Hz比較／別sink | cadence／描画との相関、対応sink同梱を確認 | デスクトップ全体や表示経路が変わる。D3D12等は現配布に含まれず単純置換できない。利用者の確認操作なしに変更しない |
-| 解像度・画質低下 | decoder負荷などの根拠と、利用者が許容する条件 | 明確な画質低下を伴うため初手にしない |
-
-sinkの追加propertyを`-vs "d3d11videosink ..."`へ渡すと、UxPlayが自動追加するAlt+Enter用propertyが入らなくなります。同期実験ではUxPlayが後段へ`sync=true/false`を追加することにも注意し、単にsink文字列へ`sync=false`を足した比較を有効と扱いません。現時点でこれらの引数は変更していません。
-
-## 8. 次の診断実装で必要な観測
-
-通常の動作を維持しつつ、利用者が明示的に開始した短時間の診断に限定します。
-
-- 映像受信・appsrc投入・decoder出力・sink処理／dropを、段階別の時刻・数・処理間隔で観測する。TCP flowの観測とは時刻を合わせる。
-- 実際のdecoder名、active caps／メモリー形式、GPU adapterを記録する。
-- QoS messageのsource element・processed/dropped・jitterを構造化し、1秒程度の集計とフレーム間隔の分布を出す。送信／decoder／sink／実表示のFPSを混同しない。異なる段階のカウンターを単純加算せず、重複計上を避ける。
-- sinkの`stats`はread-onlyのGObject値なのでエンジン内で取得する。連続する区間の`rendered`差分÷経過時間を使い、`average-rate`をそのまま描画FPSと扱わない。再生状態変更時のカウンターresetを区別する。
-- `rendered`はsinkの処理数であり、物理モニターで表示されたフレーム数と同一と保証しない。必要な場合はDXGI/DWM側の観測と突合する。
-- 診断なしとの比較、取得時間・ファイルサイズの上限、停止時の復元、端末情報の除去を用意する。映像・音声・鍵を保存しない。
-
-現在の配布には`fpsdisplaysink`の`debugutilsbad`、`GST_TRACERS`用の`coretracers`を含めていません。環境変数を設定するだけで使えるとは案内しません。`-FPSdata`もiPhone側の報告で、Windowsの実描画FPSではありません。`GST_DEBUG_DUMP_DOT_DIR`だけでは、dumpを呼ばないアプリの稼働pipeline図を自動取得できません。これらは今後の計装候補であり、今回は未実装です。
+- 計測はMirrorDock側で追加した`MDPERF1`プロトコルです。UxPlay公式の既存API・オプションと混同しないでください。対応パッチと構築スクリプトは対応ソースZIPにも含めます。
+- pipelineやカウンターのreset境界を区別し、異なる段階のカウンターを単純加算しません。1秒ごとのFPSの単純平均ではなく、比較可能なフレーム差分と経過時間を集計します。
+- `-FPSdata`はiPhone側の報告で、Windowsで描画したFPSではありません。通常の計測JSONへ生のplistを保存しません。
+- 現配布には`fpsdisplaysink`の`debugutilsbad`、`GST_TRACERS`用の`coretracers`を含めていません。環境変数だけで使えるとは案内しません。
+- `GST_DEBUG_DUMP_DOT_DIR`だけでは、dumpを呼ばないアプリの稼働pipeline図は自動取得できません。`stats=true`もread-onlyな構造体へ設定する指定なので使用しません。
+- 子プロセスは親のGStreamer環境変数を継承します。比較時は`GST_DEBUG`・`GST_TRACERS`・`GST_PLUGIN_FEATURE_RANK`等の有無を確認し、全環境を公開しません。詳細debugや外部トレースは観測負荷・情報露出が増えるため、GUI診断と混同しません。
+- 引数なし`-d`の映像`latency`値もNTP推定や受信threadの待ちを含み、純粋なWi-Fi遅延ではありません。鍵・端末情報等を含み得る全文debugを通常の共有手順にはしません。
+- GUI診断の60秒継続／途中停止／切断後復元、実デコーダー値、各FPS・sink drop・間隔・時系列の妥当性、診断OFF／通常診断／Present詳細ONの負荷、30／60の音ズレ・遅延・カクつきはWindows・iPhone実機で未検証です。CIの成功を実機での改善成功へ読み替えません。
 
 ## 公式資料
 
-- [UxPlay：同期・遅着フレームの説明](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/README.md#L657)
+- ローカル実装：[性能診断GUI](../src/main/java/jp/mirrordock/PerformancePane.java)、[診断の集計・保存](../src/main/java/jp/mirrordock/PerformanceDiagnosticsService.java)、[計測プロトコル](../src/main/java/jp/mirrordock/PerformanceProtocol.java)、[native計測](../scripts/engine/native/md_performance.c)、[起動処理](../src/main/java/jp/mirrordock/UxPlayService.java)、[ウィンドウ制御](../src/main/java/jp/mirrordock/WindowManager.java)。
 - [UxPlay：-FPSdataと-fps](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/README.md#L1607)
-- [UxPlay：Windowsのsinkとproperty指定](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/README.md#L1149)
-- [UxPlay：TCP受信と到着ログ](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/lib/raop_rtp_mirror.c#L239)
-- [GStreamer 1.28.8：D3D11 decoderの登録](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-bad/sys/d3d11/plugin.cpp#L197)
-- [GStreamer 1.28.8：D3D11/DXGI Present](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-bad/sys/d3d11/gstd3d11window_win32.cpp#L1299)
+- [UxPlay：同期・遅着フレームの説明](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/README.md#L657)
+- [UxPlay：映像pipeline](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/renderers/video_renderer.c#L384)・[TCP受信](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/lib/raop_rtp_mirror.c#L239)
+- [GStreamer 1.28.8：GstVideoSink初期化](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.c#L169)
+- [GStreamer 1.28.8：BaseSink遅着判定](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gstreamer/libs/gst/base/gstbasesink.c#L3095)・[stats実装](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gstreamer/libs/gst/base/gstbasesink.c#L5915)
+- [GStreamer 1.28.8：decoderのQoS処理](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodecoder.c#L3707)・[libav追い付き処理](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-libav/ext/libav/gstavviddec.c#L1860)
+- [GStreamer 1.28.8：D3D11 decoder登録](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-bad/sys/d3d11/plugin.cpp#L197)・[D3D11コピー経路](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-bad/sys/d3d11/gstd3d11videosink.cpp#L1683)・[DXGI Present](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gst-plugins-bad/sys/d3d11/gstd3d11window_win32.cpp#L1299)
 - [GStreamer 1.28.8：queue既定値](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gstreamer/plugins/elements/gstqueue.c#L135)
-- [GStreamer 1.28.8：stats実装](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gstreamer/libs/gst/base/gstbasesink.c#L5915)
-- [GStreamer 1.28.8：debugログのPID別ファイル展開](https://github.com/GStreamer/gstreamer/blob/1.28.8/subprojects/gstreamer/gst/gstinfo.c#L524)
-- [Microsoft：GPUViewの用途](https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/display/using-gpuview.md)
-- [Microsoft：DWMのFlip QueueとVSync待ち](https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/display/gpuview-flip-queue.md)
+- [Microsoft：GPUViewの用途](https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/display/using-gpuview.md)・[DWMのFlip QueueとVSync待ち](https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/display/gpuview-flip-queue.md)
 - [Microsoft：GPUView導入](https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/display/installing-gpuview.md)・[記録時の権限と時間](https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/display/generating-a-trace-for-gpuview.md)
 - [Microsoft：GetTcpStatisticsの対象](https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/iphlpapi/nf-iphlpapi-gettcpstatistics.md)・[送信再送カウンターの定義](https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/tcpmib/ns-tcpmib-mib_tcpstats_lh.md)
 
-GStreamerの主要3ファイルは、公式タグと配布に対応するMSYS2ソース内原本のSHA-256一致を確認しました。Microsoft LearnのWPR/GPUViewページへの直接アクセスは403でしたが、上記のMicrosoft公式GitHub原本は確認しました。WPRの個別profile名・コマンドを未確認のまま指定せず、WDF向け資料のレジストリ変更やVerifier手順も適用しません。この文書はWindowsでのフレーム落ちの計測結果を示すものではありません。
+GStreamerの主要3ファイルは、初回調査で公式タグと配布に対応するMSYS2ソース内原本のSHA-256一致を確認しました。Microsoft Learnのページは調査環境から403でしたが、上記のMicrosoft公式GitHub原本を確認しています。これらは仕様の根拠であり、Windows実機の改善計測結果ではありません。

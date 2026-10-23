@@ -29,6 +29,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib
+          import json
           import zipfile
           with zipfile.ZipFile('downloaded/MirrorDock-Engine-Windows.zip') as runtime, zipfile.ZipFile('downloaded/MirrorDock-Engine-Corresponding-Source.zip') as sources:
               entries = sources.infolist()
@@ -54,6 +55,16 @@ jobs:
               for name in ('packages.tsv', 'file-packages.tsv'):
                   if runtime.read(name) != sources.read(name):
                       raise RuntimeError('Runtime and corresponding-source mapping differ: ' + name)
+              patch_name = 'MIRRORDOCK_PERFORMANCE_PATCH.json'
+              patch_data = sources.read('patched-source/' + patch_name)
+              if runtime.read('share/mirrordock/' + patch_name) != patch_data:
+                  raise RuntimeError('Runtime and corresponding-source diagnostics patches differ')
+              patch = json.loads(patch_data)
+              if patch.get('protocol') != 'MDPERF1' or patch.get('media_payload_recording') is not False:
+                  raise RuntimeError('Unexpected diagnostics patch metadata')
+              for name, digest in patch['outputs'].items():
+                  if hashlib.sha256(sources.read('patched-source/' + name)).hexdigest() != digest:
+                      raise RuntimeError('Modified source overlay does not match runtime patch: ' + name)
               print('Downloaded corresponding-source ZIP verified:', len(expected), 'files; runtime mappings agree')
           PY
       - name: Report download verification

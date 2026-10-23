@@ -9,7 +9,8 @@ MirrorDock自身の著作権・公開ライセンスはリポジトリ所有者�
 | OpenJDK runtime | パッケージ生成に使ったJDK 21のvendor/version | GPL v2 with Classpath Exception、同梱legal notices。vendor依存の通知も保持 | jpackage runtime |
 | Gradle | 8.14.3 | Apache-2.0 | Wrapper / build tool。アプリ実行時には不要 |
 | JUnit Jupiter / Platform | 5.12.2 / 1.12.2 | EPL-2.0 | テストのみ |
-| UxPlay | 固定コミットf0cd2c3 / 1.74 Experimental | GPLv3。内部のLGPL/MIT等の通知も保持 | 別配布の実験用runtime ZIP。公式配布ではない |
+| UxPlay | 固定コミットf0cd2c3 / 1.74 ExperimentalにMirrorDock計測パッチを適用 | GPLv3。内部のLGPL/MIT等の通知も保持。変更内容をmanifestで明示 | 別配布の実験用runtime ZIP。公式配布ではない |
+| MirrorDockのネイティブ性能計測モジュール / パッチスクリプト | `scripts/engine/native/*` / `apply_metrics_patch.py` | GPL-3.0-or-later。UxPlayへ組み込む変更として対応ソースに含める | 実験用runtimeと対応ソースZIP |
 | GStreamer / plugins / FFmpeg | runtimeのmanifestに記録 | DLL/pluginごとにLGPL/GPL等。MSYS2 FFmpegはGPL機能を有効にした構成 | 実験用runtime ZIPの対象ファイル |
 | OpenSSL | runtimeに含める3.x | Apache-2.0と関連通知 | 実験用runtime ZIPの対象ファイル |
 | libplist / MinGW runtime / その他の依存ライブラリ | runtimeのmanifestに記録 | 各packageのlicense、notice、例外条件を確認 | 実験用runtime ZIPの対象ファイル |
@@ -24,6 +25,12 @@ MirrorDock自身の著作権・公開ライセンスはリポジトリ所有者�
 MirrorDockの通常インストーラーにはUxPlay・GStreamer DLL・Bonjourを同梱しません。CIが作るruntime ZIPをGUIから導入する経路を追加しています。ソースビルドはCIで行い、利用者には要求しません。WindowsとiPhoneの実機検証は未実施です。
 
 runtime ZIPを提供する場合は、対応ソースZIP・manifest・ライセンス通知を同じダウンロード場所で提供する方針です。GPLv3第6節dを想定し、正確なUxPlayソース、配布DLLに対応するMSYS2 source archive、PKGBUILD・patch、構築・配置スクリプトを取得できるようにします。必要なソースや通知が揃わない場合、配布を成功扱いにしません。バイナリだけを再配布する場合も、対応ソースの取得案内を失わせないでください。
+
+計測対応版のエンジンにはMirrorDockが任意の性能診断用に加えた変更があります。新しいCモジュールとパッチスクリプトはGPL-3.0-or-laterで提供し、UxPlay上流が提供した変更と混同しないようにします。runtime内の`share/mirrordock/MIRRORDOCK_PERFORMANCE_PATCH.json`に、上流コミット、変更元・変更後ファイルとスクリプトのハッシュを記録します。`MDPERF1`はMirrorDockの計測プロトコル名であり、AirPlayの認証・暗号化を独自に置き換えるものではありません。
+
+対応ソースZIPには、変更していない上流の固定コミットのtar原本、`build-scripts/engine/`のパッチスクリプトとCモジュール、`patched-source/`の完全な変更後ファイル、`MIRRORDOCK_PERFORMANCE_PATCH.json`を含めます。上流の著作権・ライセンス通知は保持します。Git checkoutにスクリプトを適用する再現経路に加え、tar原本を展開して`patched-source/`を上書きするソースZIP単独の再構成手順を`SOURCES-README.txt`に記載します。計測を加えたバイナリの配布で、上流原本だけを対応ソースとして案内しないでください。
+
+この変更を含むコミットの「Experimental Windows engine」workflowが成功した場合、その実行の`MirrorDock-Engine-Windows-and-Sources` artifactからruntimeと対応ソースを一緒に取得します。過去の成功runに、この変更が含まれるとは限りません。今回の変更のCI成功や実機動作は、実行結果を確認するまで未確認です。
 
 MSYS2バイナリパッケージに通知本文がない場合は、監査した版・ライセンス・対応ソースSHA-256に一致する原本から収集します。[監査定義](scripts/engine/audited-source-notices.json)とruntime内の`source-provenance.json`に、tar原本またはGitコミット・本文の対応関係を記録します。未知のパッケージや通知不足は配布を停止します。
 

@@ -14,9 +14,38 @@ public final class UxPlayService implements AirPlayService {
     private volatile State state=State.STOPPED;
     private volatile Process process;
     private volatile Consumer<Event> listener=e -> {};
+    private volatile Consumer<PerformanceProtocol.Message> metricsListener=message -> {};
+    private volatile boolean metricsReady;
+    private volatile Settings activeSettings;
     private boolean active, closed;
     private long generation;
     public void setListener(Consumer<Event> listener) { this.listener=Objects.requireNonNull(listener); }
+    public void setMetricsListener(Consumer<PerformanceProtocol.Message> listener) { metricsListener=Objects.requireNonNull(listener); }
+    public Settings activeSettings() { return activeSettings; }
+    public boolean metricsAvailable() { Process child=process;return metricsReady && child!=null && child.isAlive(); }
+    public boolean startMetrics(long sessionId,int seconds) {
+        return startMetrics(sessionId,seconds,false);
+    }
+    public boolean startMetrics(long sessionId,int seconds,boolean detailedPresent) {
+        return sendMetricsCommand(PerformanceProtocol.startCommand(sessionId,seconds,detailedPresent));
+    }
+    public void stopMetrics(long sessionId) { sendMetricsCommand(PerformanceProtocol.stopCommand(sessionId)); }
+    private synchronized boolean sendMetricsCommand(String command) {
+        if (closed || !metricsAvailable()) return false;
+        Process target=process;
+        long run=generation;
+        // The UI never waits for pipe writes. Commands are bounded, fixed tokens.
+        control.submit(() -> {
+            synchronized (this) {
+                if (run!=generation || target!=process || !metricsReady) return;
+                try {
+                    target.getOutputStream().write(command.getBytes(StandardCharsets.US_ASCII));
+                    target.getOutputStream().flush();
+                } catch (IOException ignored) { metricsReady=false; }
+            }
+        });
+        return true;
+    }
     public State state() { return state; }
     public long pid() { Process p=process;return p==null ? -1 : p.pid(); }
     private synchronized void emit(long run, State next,String message) {
@@ -41,7 +70,7 @@ public final class UxPlayService implements AirPlayService {
         return p;
     }
     static List<String> command(Path executable, Settings s) {
-        List<String> args=new ArrayList<>(List.of(executable.toString(),"-n",s.receiverName(),"-nh","-d","1","-as",s.audio()?"autoaudiosink":"0"));
+        List<String> args=new ArrayList<>(List.of(executable.toString(),"-n",s.receiverName(),"-nh","-d","1","-fps",Integer.toString(s.requestedFps()),"-as",s.audio()?"autoaudiosink":"0"));
         if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) args.addAll(List.of("-vs","d3d11videosink"));
         return args;
     }
@@ -53,9 +82,13 @@ public final class UxPlayService implements AirPlayService {
             builder.directory(executable.getParent().toFile());
             // Prevent user UxPlay startup files from enabling recording or overriding privacy-sensitive defaults.
             EngineEnvironment.configure(builder,executable,SettingsService.userDirectory());
+            // Patched engines wait on the private parent/child stdin pipe. No
+            // per-frame diagnostic hooks are installed until an explicit START.
+            builder.environment().put("MIRRORDOCK_PERF_CONTROL","1");
             synchronized(this) {
                 if (run!=generation || !active) return;
-                child=builder.start(); process=child;
+                metricsReady=false;
+                child=builder.start(); process=child; activeSettings=settings;
                 control.schedule(() -> {
                     synchronized(this) {
                         if(run==generation && state==State.STARTING) {
@@ -81,10 +114,23 @@ public final class UxPlayService implements AirPlayService {
         } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         finally {
             if (child!=null) terminate(child);
-            synchronized(this) { if (run==generation) {process=null;active=false;} }
+            synchronized(this) { if (run==generation) {process=null;activeSettings=null;metricsReady=false;active=false;} }
         }
     }
     void parse(long run,String line) {
+        if (line.startsWith("MDPERF1 ")) {
+            PerformanceProtocol.parse(line).ifPresent(message -> {
+                synchronized (this) {
+                    if (run!=generation) return;
+                    if (message instanceof PerformanceProtocol.Ready) metricsReady=true;
+                }
+                // Diagnostics can send a control command in response. Keep its
+                // lock independent from process lifecycle/pipe management.
+                try { metricsListener.accept(message); }
+                catch (RuntimeException ignored) { /* A failed diagnostic must not terminate video/audio reception. */ }
+            });
+            return;
+        }
         String lower=line.toLowerCase(Locale.ROOT);
         if (line.contains("register_dnssd: advertised AirPlay service")) emit(run,State.WAITING,"接続待機中（サービス広告を開始しました）");
         else if (line.contains("Open connections: 0") || lower.contains("lost connection with client")) emit(run,State.WAITING,"接続が切れました。再接続を待っています。");
@@ -100,7 +146,7 @@ public final class UxPlayService implements AirPlayService {
     public synchronized void stop() {
         if (closed) return;
         long run=++generation; active=false;
-        Process old=process;process=null;
+        Process old=process;process=null;activeSettings=null;metricsReady=false;
         if (old!=null) {
             var children=old.descendants().toList();
             control.submit(() -> {children.forEach(ProcessHandle::destroy);terminate(old);children.stream().filter(ProcessHandle::isAlive).forEach(ProcessHandle::destroyForcibly);});
