@@ -19,7 +19,7 @@ tasks.register('packageWindows', Exec) {
         if (!System.getProperty('os.name').toLowerCase().contains('win')) throw new GradleException('Windows x64 JDK 21 + WiX 3.x が必要です。')
     }
     commandLine "${System.getProperty('java.home')}/bin/jpackage.exe", '--type', 'exe',
-        '--name', 'MirrorDock', '--app-version', '1.0.0', '--vendor', 'MirrorDock',
+        '--name', 'MirrorDock', '--app-version', '1.1.0', '--vendor', 'MirrorDock',
         '--input', layout.buildDirectory.dir('install/MirrorDock/lib').get().asFile,
         '--main-jar', 'MirrorDock.jar', '--main-class', application.mainClass.get(),
         '--dest', layout.buildDirectory.dir('installer').get().asFile,
