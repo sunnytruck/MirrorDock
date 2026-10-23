@@ -141,6 +141,8 @@ sinkとdecoderは別々のQoS/drop経路を持ち、CPUデコード後にGPUへ�
 
 ## 公式資料
 
+今回の検証記録：[アプリ1.1.0のWindows CI](https://github.com/sunnytruck/MirrorDock/actions/runs/39877318366)、[計測対応エンジンRun #9](https://github.com/sunnytruck/MirrorDock/actions/runs/39876669997)、[公開Artifactsのダウンロード・整合性検証](https://github.com/sunnytruck/MirrorDock/actions/runs/39878253667)が成功しています。CIの合成映像試験は、実機での安定60fps・低遅延・カクつき改善の証拠ではありません。
+
 - ローカル実装：[性能診断GUI](../src/main/java/jp/mirrordock/PerformancePane.java)、[診断の集計・保存](../src/main/java/jp/mirrordock/PerformanceDiagnosticsService.java)、[計測プロトコル](../src/main/java/jp/mirrordock/PerformanceProtocol.java)、[native計測](../scripts/engine/native/md_performance.c)、[起動処理](../src/main/java/jp/mirrordock/UxPlayService.java)、[ウィンドウ制御](../src/main/java/jp/mirrordock/WindowManager.java)。
 - [UxPlay：-FPSdataと-fps](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/README.md#L1607)
 - [UxPlay：同期・遅着フレームの説明](https://github.com/FDH2/UxPlay/blob/f0cd2c363786af7d3ddf3fc60d523c8ed8c3b967/README.md#L657)

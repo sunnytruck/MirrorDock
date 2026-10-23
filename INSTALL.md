@@ -19,8 +19,8 @@ Windows CIでの構築・配布検証と、開発環境での実機計測、利�
 
 **利用者からWindows実機で映像・音声を受信できた報告がありますが、開発環境での実機計測は未実施です。実験版であり、動作を保証しません。** CIのビルド・配布検証と、実機の受信・性能検証は別です。
 
-1. [ActionsのWindows package](https://github.com/sunnytruck/MirrorDock/actions/workflows/windows.yml) で、今回の変更を含む成功した実行を開きます。Artifactsの`MirrorDock-Windows`をダウンロード・展開し、EXEをインストールします。Javaは同梱されています。
-2. [Actionsのエンジン配布](https://github.com/sunnytruck/MirrorDock/actions/workflows/engine.yml)で、今回の計測拡張を含む成功した実行のArtifactsをダウンロード・展開します。旧版の[Run #8](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066/artifacts/12414019562)は通常受信には使えますが、GUI性能診断の自動値を取得できません。ソースコード用ZIPや上流のSource code ZIPではありません。
+1. [1.1.0のWindowsアプリ](https://github.com/sunnytruck/MirrorDock/actions/runs/39877318366/artifacts/12469485697)の`MirrorDock-Windows`をダウンロード・展開し、EXEをインストールします。Javaは同梱されています。旧版のMirrorDockと受信エンジンは先に停止してください。既存1.0.0からの更新・設定復元は実機では未確認です。
+2. [計測対応エンジン：Run #9](https://github.com/sunnytruck/MirrorDock/actions/runs/39876669997/artifacts/12469436892)のArtifactsをダウンロード・展開します。旧版の[Run #8](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066/artifacts/12414019562)は通常受信には使えますが、GUI性能診断の自動値を取得できません。ソースコード用ZIPや上流のSource code ZIPではありません。
 3. MirrorDockの「受信エンジンの導入・診断」→「エンジンZIPを導入」で、内側の`MirrorDock-Engine-Windows.zip`を選択します。GUIが検査・展開してパスを保存します。MSYS2やコンパイラーは不要です。
 4. 「受信エンジンを診断」を押します。ヘルプ起動、Windowsの既知のDLLエラー、標準ファイアウォールのルールを確認します。成功してもiPhone接続を保証しません。
 5. 「受信開始」。同じ家庭内LANのiPhoneで「画面ミラーリング」→「MirrorDock」を選択します。

@@ -15,7 +15,7 @@ Windows 11 x64 向けの日本語 JavaFX AirPlay 受信ランチャーです。i
 配布用インストーラーがある場合はインストール後、スタートメニューの MirrorDock を開きます。
 初回は「受信エンジンの導入・診断」から、MirrorDock側のCIで作るエンジンZIPを導入します。利用者のMSYS2導入・ソースビルドは不要です。
 [INSTALL.md](INSTALL.md) にダウンロード・GUI操作の手順と、既にUxPlayがある場合の設定方法を記載しています。
-このエンジン配布は実験段階で、対応するCIが成功してArtifactsが生成されるまでは取得できません。
+エンジンはMirrorDock側CIで作成した実験版です。対応ソースも同じArtifactsに含めて配布します。
 信頼できる UxPlay のみ指定してください。受信は管理者権限なしで実行します。
 
 ## iPhone との接続
@@ -70,8 +70,8 @@ iPhoneとの接続後、「性能診断・30／60fpsの比較」→「性能診�
 `packageWindows` は **Windows x64 上の JDK 21 + WiX 3.x（candle.exe / light.exe が PATH にあること）** が必要です。
 `build/installer/` に EXE インストーラーを生成し、jpackage が Java ランタイムを同梱します。UxPlay / Bonjour / MSYS2 / GStreamer DLL は同梱しません。
 `build/distributions/` の ZIP は JDK/JRE 21 の別途導入が必要です。Linux で生成した ZIP に Windows 用 JavaFX は入りません。Windows 配布物は Windows 上で再ビルドしてください。
-前版のWindowsビルド・インストーラー生成は [Windows CI（fa2510f）](https://github.com/sunnytruck/MirrorDock/actions/runs/39751871976) で成功しています。今回の変更を含む配布物は、対象コミットの[Windows package](https://github.com/sunnytruck/MirrorDock/actions/workflows/windows.yml)の結果で確認してください。
-`.github/workflows/engine.yml` はUxPlayの固定SHAへMirrorDockの計測パッチを適用してWindowsでビルドし、DLL・プラグインと対応ソースを同じArtifactsにまとめます。署名確認・対応ソース取得・DLL依存解決・プラグイン／計測拡張の検査が失敗した場合は成果物を配布しません。[Engine Run #8（fa2510f）](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066)は旧版の配布成功記録で、性能診断拡張は含みません。新エンジンは[今回の変更を含む成功したCI](https://github.com/sunnytruck/MirrorDock/actions/workflows/engine.yml)から取得します。
+1.1.0のWindowsビルド・テスト・インストーラー生成は[Windows CI（65242e3）](https://github.com/sunnytruck/MirrorDock/actions/runs/39877318366)で成功しています。[アプリのArtifacts](https://github.com/sunnytruck/MirrorDock/actions/runs/39877318366/artifacts/12469485697)を展開してEXEを実行します。旧版から更新する場合は、先にMirrorDockと受信エンジンを停止してください。既存1.0.0からのインストーラー更新と設定復元は実機での確認対象です。
+`.github/workflows/engine.yml` はUxPlayの固定SHAへMirrorDockの計測パッチを適用してWindowsでビルドし、DLL・プラグインと対応ソースを同じArtifactsにまとめます。署名確認・対応ソース取得・DLL依存解決・プラグイン／計測拡張の検査が失敗した場合は成果物を配布しません。計測対応の[Engine Run #9（bff397d）](https://github.com/sunnytruck/MirrorDock/actions/runs/39876669997)が成功し、[エンジンと対応ソースのArtifacts](https://github.com/sunnytruck/MirrorDock/actions/runs/39876669997/artifacts/12469436892)を公開しています。[別CIによるダウンロード検証](https://github.com/sunnytruck/MirrorDock/actions/runs/39878253667)も成功しました。
 同梱の実現可能性とライセンス義務は [docs/ENGINE_DISTRIBUTION.md](docs/ENGINE_DISTRIBUTION.md) を参照してください。
 
 ## 検証と未確認事項
@@ -79,9 +79,9 @@ iPhoneとの接続後、「性能診断・30／60fpsの比較」→「性能診�
 今回のクラウド Linux x64 では `build`・`installDist`、Java単体テスト69件（失敗0・スキップ0）、Pythonテスト59件（Windows専用1件スキップ）、合成映像によるnative計測テストとGUI smokeが成功しました。Windowsのビルド・テストは対象コミットのCI結果も確認してください。合成映像の試験はWindows GPUやiPhoneの実機性能の確認ではありません。
 仮想画面で GUI 起動と UxPlay 未設定時のエラー表示を検証しました。テストのプロセス起動・停止には模擬エンジンを使用しています。実際の UxPlay 受信成功を示すものではありません。
 
-前版の配布処理PythonテストはLinuxで51件成功、Windows専用1件をスキップし、[Windows CI Run #8](https://github.com/sunnytruck/MirrorDock/actions/runs/39751872066)では52件成功・スキップなしでした。今回の計測パッチ・プロトコル検査はその記録に含まれません。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。Bash・Git・bsdtar（Linuxではlibarchive-tools）が必要です。エンジンCIではMSYS2がこれらを導入します。
+[Windows Engine Run #9](https://github.com/sunnytruck/MirrorDock/actions/runs/39876669997)ではPythonテスト59件が成功・スキップなしです。合成raw／H264映像によるnative診断、UxPlayビルド、DLL収集、対応ソース・ライセンス収集、隔離PATHでのhelp／plugin検査、502ファイルのエンジンZIP検証、Artifacts公開が成功しました。別CIで公開済みZIPをダウンロードし、runtime／対応ソースのSHA256・ZIP CRC・パッケージ対応表・変更後ソースmanifestの一致も確認しました。再実行は `python -m unittest discover -s scripts/engine -p "test_*.py"` です。Bash・Git・bsdtar（Linuxではlibarchive-tools）が必要です。エンジンCIではMSYS2がこれらを導入します。
 
-テスト対象：従来の設定・プロセス・画面位置補正に加え、ZIPの導入/破損/危険なパス/重複/形式、DLLエラー分類、診断タイムアウト時の停止、ファイアウォール結果の慎重な解釈、ポータブル環境設定。診断プロセスも模擬エンジンを使い、Windows固有の実行自体は未確認です。
+テスト対象：従来の設定・プロセス・画面位置補正に加え、ZIPの導入/破損/危険なパス/重複/形式、DLLエラー分類、診断タイムアウト時の停止、ファイアウォール結果の慎重な解釈、ポータブル環境設定。Javaのプロセス診断は模擬エンジンを使います。実機のD3D11描画、音声デバイス、ファイアウォール経由の接続はCIの検証範囲外です。
 
 2026-10-22に利用者からWindows実機での映像・音声受信成功と、断続的な映像の引っかかりの報告がありました。申告環境はCore i5-14400F・RTX 4060 Ti・280Hzです。FPS・欠落数・原因・改善効果はまだ実測していません。
 
